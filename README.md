@@ -6,7 +6,7 @@
  [![Say Thanks](https://img.shields.io/badge/Say%20Thanks-!-yellow.svg?style=for-the-badge)](https://saythanks.io/to/mtpsilva)
 ![](https://img.shields.io/github/last-commit/aeonSolutions/aeonlabs-ESP32-C-Base-Firmware-Libraries?style=for-the-badge)
 <a href="https://trackgit.com">
-<img src="https://us-central1-trackgit-analytics.cloudfunctions.net/token/ping/lgeu3mh7autbw0q1rjhl" alt="trackgit-views" />
+<img src="https://us-central1-trackgit-analytics.cloudfunctions.net/token/ping/lgj908xjlweccmzynhbl" alt="trackgit-views" />
 </a>
 ![](https://views.whatilearened.today/views/github/aeonSolutions/aeonlabs-ESP32-C-Base-Firmware-Libraries.svg)
 [![Open Source Love svg1](https://badges.frapsoft.com/os/v1/open-source.svg?v=103)](#)
