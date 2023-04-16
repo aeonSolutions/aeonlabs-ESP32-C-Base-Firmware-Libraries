@@ -18,6 +18,21 @@
 
 # ESP32 C++ Base Firmware Libraries
 
+These are simple C++ class libraries i maintain to speed up firmware code developent on all my ESP32 PCB electonics.
+cureenlyy it uncludes:
+
+- Geolocation over WIFI 
+- Onboard sensors 
+   - SHT3x Temperature & Humidty sensor
+   - LSM6DS3 motion sensor
+- FFat File managment
+- WIFI connectivity managemnt
+- NPT Internet Time Syncronization
+- $GBRL command style communication
+   - over Serial UART interface
+   - over Bluetooth BLE interface
+- Microprocessor Core Frequency Management
+- Some simple Math functions
 
 <br />
 <br />
