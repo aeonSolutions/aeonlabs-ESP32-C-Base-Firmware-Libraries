@@ -19,7 +19,7 @@
 # ESP32 C++ Base Firmware Libraries
 
 These are simple C++ class libraries i maintain to speed up firmware code developent on all my ESP32 PCB electonics.
-cureenlyy it uncludes:
+currently it uncludes:
 
 - Geolocation over WIFI 
 - Onboard sensors 
