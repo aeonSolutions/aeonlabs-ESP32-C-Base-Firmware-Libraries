@@ -36,7 +36,8 @@ Currently it uncludes:
    - over Bluetooth BLE interface
 - Microprocessor Core Frequency Management
 - Some simple Math functions
-- CSV style Files for settings and configuration 
+- CSV style Files for settings and configuration
+- AT204SHA IC for unique data fingerprint identification on open environments  
 
 <br>
 
