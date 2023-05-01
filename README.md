@@ -36,6 +36,7 @@ Currently it uncludes:
 - Microprocessor Core Frequency Management
 - Some simple Math functions
 
+<br>
 
 ### Smart Devices I prototyped and using this code on their OEM firmware versions
 
