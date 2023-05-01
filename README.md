@@ -26,12 +26,13 @@ Currently it uncludes:
 - Geolocation over WIFI 
 - Onboard sensors 
    - SHT3x Temperature & Humidty sensor
+   - AHT2x Temperature & Humidty sensor
    - LSM6DS3 motion sensor
 - FFat File managment
 - WIFI connectivity managemnt
 - NPT Internet Time Syncronization
 - $GBRL command style communication
-   - over Serial UART interface
+   - over Serial USB-C interface
    - over Bluetooth BLE interface
 - Microprocessor Core Frequency Management
 - Some simple Math functions
