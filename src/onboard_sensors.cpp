@@ -5,15 +5,16 @@
 
 ONBOARD_SENSORS::ONBOARD_SENSORS(){
     this->NUMBER_OF_ONBOARD_SENSORS=0;
+    this->AHT20_ADDRESS = 0x38;
+
 
 }
 
 void ONBOARD_SENSORS::init(INTERFACE_CLASS* interface, mSerial* mserial){
-    this->interface=interface;
     this->mserial=mserial;
-
     this->mserial->printStrln("Onboard sensors init...");
-
+    
+    this->interface=interface;
     this->i2c_err_t[0]="I2C_ERROR_OK";
     this->i2c_err_t[1]="I2C_ERROR_DEV";     // 1
     this->i2c_err_t[2]="I2C_ERROR_ACK";     // 2
@@ -24,7 +25,9 @@ void ONBOARD_SENSORS::init(INTERFACE_CLASS* interface, mSerial* mserial){
     this->i2c_err_t[7]="I2C_ERROR_CONTINUE";// 7
     this->i2c_err_t[8]="I2C_ERROR_NO_BEGIN"; // 8
 
-    this->startSHT();
+    aht20= new AHT20(this->AHT20_ADDRESS);
+
+    this->startAHT();
     this->startLSM6DS3();
     this->prevReadings[0]=0.0;
     this->prevReadings[1]=0.0;
@@ -37,65 +40,47 @@ void ONBOARD_SENSORS::init(INTERFACE_CLASS* interface, mSerial* mserial){
     this->numtimesMotionDetected=0;
 
     time(&this->$espunixtimePrev);
+    
+    this->mserial->printStrln("done.\n");
 }
 
-// onBoard Sensors
+// ***************************************************************
 void ONBOARD_SENSORS::request_onBoard_Sensor_Measurements(){
-    if (SHTsensorAvail == false) {
-      startSHT(); 
+    if (AHTsensorAvail == false) {
+      startAHT(); 
     }  
 
-    this->mserial->printStr("SHT31 data: ");
-    sht31.read();
-    
-    sht_temp = sht31.getTemperature();
-    sht_humidity = sht31.getHumidity();
+    aht_temp = aht20->getTemperature();
+    aht_humidity = aht20->getHumidity();
 
-    if (! isnan(sht_temp)) { // check if 'is not a number'
-      this->mserial->printStr("Temp *C = ");
-      this->mserial->printStr(String(sht_temp));
-    } else {
+    if (isnan(aht_temp)) { // check if 'is not a number'
       this->mserial->printStrln("Failed to read temperature");
     }
 
-    if (! isnan(sht_humidity)) { // check if 'is not a number'
-      this->mserial->printStr("   Hum. % = ");
-      this->mserial->printStrln(String(sht_humidity));
-    } else {
+    if (isnan(aht_humidity)) { // check if 'is not a number'
       this->mserial->printStrln("Failed to read humidity");
     }
     
- 
     getLSM6DS3sensorData();
 }
 
+
 // ********************************************************
-void ONBOARD_SENSORS::startSHT() {
+void ONBOARD_SENSORS::startAHT() {
   
-    bool result = sht31.begin(this->SHT31_ADDRESS);
-    this->mserial->printStrln("SHT sensor started.");
-    
+    Wire.begin();
+
+    bool result = this->aht20->begin();  
     if (result){
-        this->SHTsensorAvail = true;
-        this->mserial->printStrln("SHT status code: " + String(sht31.readStatus()));
-        if (sht31.readStatus()==0){
-          this->mserial->printStr("SHT initialization DONE.");
-          this->NUMBER_OF_ONBOARD_SENSORS= this->NUMBER_OF_ONBOARD_SENSORS+1;
-          interface->onBoardLED->led[0] = interface->onBoardLED->LED_GREEN;
-          interface->onBoardLED->statusLED(100,1); 
-        }else{
-        this->mserial->printStr("SHT initialization ERROR.");
-          interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
-          interface->onBoardLED->statusLED(100,2); 
-        }
-        this->mserial->printStrln("");
+        this->AHTsensorAvail = true;
+        this->mserial->printStr("AHT sensor status code: " + String(this->aht20->getStatus()));
+        this->mserial->printStrln(" <<>> calibrated: " + String( this->aht20->isCalibrated() == 1 ? "True" : "False" ) );
     }else{
-        this->SHTsensorAvail = false;
-        this->mserial->printStr("SHT sensor not found ");
+        this->AHTsensorAvail = false;
+        this->mserial->printStrln("AHT sensor not found ");
         interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
         interface->onBoardLED->statusLED(100,2); 
     }
-    this->mserial->printStrln("SHT completed.");
 }
 // ********************************************************
 
@@ -103,13 +88,12 @@ void ONBOARD_SENSORS::startLSM6DS3(){
   this->mserial->printStr("Starting Motion Sensor...");
 
   if ( LSM6DS3sensor.begin() != 0 ) {
-    this->mserial->printStrln("FAIL!");
-    this->mserial->printStrln("Error starting the sensor at specified address");
+    this->mserial->printStrln("\nError starting the sensor at specified address");
     interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
     interface->onBoardLED->statusLED(100,2); 
     this->MotionSensorAvail=false;
   } else {
-    this->mserial->printStrln("started.");
+    this->mserial->printStrln("done.");
     interface->onBoardLED->led[0] = interface->onBoardLED->LED_GREEN;
     interface->onBoardLED->statusLED(100,0); 
     this->NUMBER_OF_ONBOARD_SENSORS=this->NUMBER_OF_ONBOARD_SENSORS+1;
@@ -255,47 +239,71 @@ void ONBOARD_SENSORS::I2Cscanner() {
 }
 
 // *********************************************************
- void ONBOARD_SENSORS::helpCommands(String commType){
+ bool ONBOARD_SENSORS::helpCommands(uint8_t sendTo){
     String dataStr="Onboard sensors commands:\n" \
-                    "$ot                           - View Onboard Temperature data ( " + String(char(176)) + String("C )") +  " )\n" \
-                    "$oh                           - View Onboard Humidity data ( % )\n" \
+                    "$sensor port [on/off]           - Enable/ Disable Power on External Ports\n" \
                     "\n" \
-                    "$oa                           - View onboard acceleartion data ( g ) \n" \
-                    "$og                           - View Onboard Gyroscope data ( dps ) \n" \
-                    "$om                           - View Microcontroller Temperature ( " + String(char(176)) + String("C )") + " )\n\n";
+                    "$ot                             - View Onboard Temperature data ( " + String(char(176)) + String("C )") +  " )\n" \
+                    "$oh                             - View Onboard Humidity data ( % )\n" \
+                    "\n" \
+                    "$oa                             - View onboard acceleartion data ( g ) \n" \
+                    "$og                             - View Onboard Gyroscope data ( dps ) \n" \
+                    "$om                             - View Microcontroller Temperature ( " + String(char(176)) + String("C )") + " )\n\n";
 
 
-    this->interface->sendBLEstring( dataStr, commType);  
+    this->interface->sendBLEstring( dataStr, sendTo);
+    return false; 
  }
 
 // *********************************************************
-void ONBOARD_SENSORS::commands(String $BLE_CMD, String commType){
+bool ONBOARD_SENSORS::commands(String $BLE_CMD, uint8_t sendTo){
   String dataStr="";
   if($BLE_CMD=="$?" || $BLE_CMD=="$help"){
-      this->helpCommands(commType);
+      return this->helpCommands(sendTo);
   } else if($BLE_CMD=="$ot"){
     this->request_onBoard_Sensor_Measurements();
-    dataStr=String("Current onboard Temperature is:") + String(roundFloat(this->sht_temp,2)) + String(char(176)) + String("C") +String(char(10));
-    this->interface->sendBLEstring( dataStr, commType);  
+    dataStr=String("Current onboard Temperature is: ") + String(roundFloat(this->aht_temp,2)) + String(char(176)) + String("C") +String(char(10));
+    this->interface->sendBLEstring( dataStr, sendTo); 
+    return true; 
   } else if($BLE_CMD=="$oh"){
     this->request_onBoard_Sensor_Measurements();
-    dataStr=String("Current onboard Humidity is:") + String(this->sht_humidity)+ String(" %") +String(char(10));
-    this->interface->sendBLEstring( dataStr, commType);  
+    dataStr=String("Current onboard Humidity is: ") + String(this->aht_humidity)+ String(" %") +String(char(10));
+    this->interface->sendBLEstring( dataStr, sendTo);  
+    return true; 
   } else if($BLE_CMD=="$oa"){
     this->request_onBoard_Sensor_Measurements();
-    dataStr=String("Current onboard acceleration data ( g ) :") + String("  X: ")+String(roundFloat(this->LSM6DS3_Motion_X,2)) +"  Y:" + String(roundFloat(this->LSM6DS3_Motion_Y,2)) + "  Z: " + String(roundFloat(this->LSM6DS3_Motion_Z,2)) +String(char(10));
-    this->interface->sendBLEstring( dataStr, commType);  
+    dataStr=String("Current onboard acceleration data ( g ) : ") + String("  X: ")+String(roundFloat(this->LSM6DS3_Motion_X,2)) +"  Y:" + String(roundFloat(this->LSM6DS3_Motion_Y,2)) + "  Z: " + String(roundFloat(this->LSM6DS3_Motion_Z,2)) +String(char(10));
+    this->interface->sendBLEstring( dataStr, sendTo);  
+    return true; 
   } else if($BLE_CMD=="$og"){
     this->request_onBoard_Sensor_Measurements();
-    dataStr=String("Current onboard angular data ( dps ):") + String("  X: ") + String(roundFloat(this->LSM6DS3_GYRO_X,2)) +"  Y:" + String(roundFloat(this->LSM6DS3_GYRO_Y,2)) + "  Z: " + String(roundFloat(this->LSM6DS3_GYRO_Z,2)) +String(char(10));
-    this->interface->sendBLEstring( dataStr, commType);  
+    dataStr=String("Current onboard angular data ( dps ): ") + String("  X: ") + String(roundFloat(this->LSM6DS3_GYRO_X,2)) +"  Y:" + String(roundFloat(this->LSM6DS3_GYRO_Y,2)) + "  Z: " + String(roundFloat(this->LSM6DS3_GYRO_Z,2)) +String(char(10));
+    this->interface->sendBLEstring( dataStr, sendTo);  
+    return true; 
   } else if($BLE_CMD=="$om"){
     this->request_onBoard_Sensor_Measurements();
     Serial.print("MCU temp: ");
     Serial.println(this->LSM6DS3_TEMP);
-    dataStr=String("Current MCU temperature is:") + String(roundFloat(this->LSM6DS3_TEMP,2))+ String(char(176)) + String("C")  +String(char(10));
-    this->interface->sendBLEstring( dataStr, commType);  
+    dataStr=String("Current MCU temperature is: ") + String(roundFloat(this->LSM6DS3_TEMP,2))+ String(char(176)) + String("C")  +String(char(10));
+    this->interface->sendBLEstring( dataStr, sendTo);  
+    return true; 
+  }else if($BLE_CMD.indexOf("$sensor port")>-1){
+    if( $BLE_CMD == "$sensor port on" ){
+      digitalWrite(this->interface->EXT_PLUG_PWR_EN ,HIGH);
+      this->interface->POWER_PLUG_IS_ON=true;
+      dataStr="Power Enabled on Sensor Ports";
+      this->interface->sendBLEstring( dataStr, sendTo);  
+      return true;
+    }else if( $BLE_CMD == "$sensor port off" ){
+      digitalWrite(this->interface->EXT_PLUG_PWR_EN ,LOW);
+      this->interface->POWER_PLUG_IS_ON=false;
+      dataStr="Power Disabled on Sensor Ports";
+      this->interface->sendBLEstring( dataStr, sendTo);  
+      return true;
+    }
   }
+  
+  return false; 
 }
 
 

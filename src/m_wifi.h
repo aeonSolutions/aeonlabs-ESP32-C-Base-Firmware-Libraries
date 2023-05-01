@@ -21,8 +21,19 @@
 class M_WIFI_CLASS {
   private:
     WiFiMulti* wifiMulti;
-
+    long int lastTimeWifiConnectAttempt;
     static void WiFiEvent(WiFiEvent_t event);
+    
+   // GBRL commands  *********************************************
+    String selected_menu;
+    String selected_sub_menu;
+    String wifi_ssid;
+    String wifi_pwd;
+
+    bool helpCommands(uint8_t sendTo );
+    bool wifi_commands(String $BLE_CMD, uint8_t sendTo );
+    bool change_device_name(String $BLE_CMD, uint8_t sendTo );
+
 
   public:
     int HTTP_TTL; // 20 sec TTL
@@ -54,7 +65,13 @@ void WIFIscanNetworks();
 
 void WIFIevents();
 void updateInternetTime();
+void resumeStandbyMode();
+
+   // GBRL commands  *********************************************
+bool gbrl_commands(String $BLE_CMD, uint8_t sendTo );
 
 };
+
+
 
 #endif

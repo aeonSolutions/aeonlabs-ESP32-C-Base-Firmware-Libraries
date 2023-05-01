@@ -1,6 +1,6 @@
 #include "manage_mcu_freq.h"
 #include <Arduino.h>
-
+#include <HardwareSerial.h>
 
 //--------------------------------------------------------------------------
 // MCU Clock Management ******************************
@@ -25,11 +25,11 @@ void changeMcuFreq(INTERFACE_CLASS* interface, int Freq){
 void changeSerialBaudRate(INTERFACE_CLASS* interface, uint32_t Freq){
   if (Freq < 80) {
     interface->MCU_FREQUENCY_SERIAL_SPEED = 80 / Freq * interface->SERIAL_DEFAULT_SPEED;
-  }
-  else {
+  } else {
     interface->MCU_FREQUENCY_SERIAL_SPEED = interface->SERIAL_DEFAULT_SPEED;
   }
-  Serial.end();
-  Serial.begin(interface->MCU_FREQUENCY_SERIAL_SPEED);
-  Serial.println(interface->MCU_FREQUENCY_SERIAL_SPEED);
+  interface->UARTserial->end();
+  interface->UARTserial->begin(interface->MCU_FREQUENCY_SERIAL_SPEED);
+  interface->UARTserial->print("The current Serial Baud speed on the UART Port is ");
+  interface->UARTserial->println(interface->MCU_FREQUENCY_SERIAL_SPEED);
 }

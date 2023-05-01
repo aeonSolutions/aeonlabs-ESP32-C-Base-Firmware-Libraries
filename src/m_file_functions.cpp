@@ -13,3 +13,35 @@ tm CompileDateTime(char const *dateStr, char const *timeStr){
     t.tm_year = year - 1900;    
     return t;
 }
+
+// **************************************************************
+
+bool isStringAllSpaces(String str){
+  for (int i = 0; i < str.length(); i++){
+    if ( str.charAt(i) != ' ' )
+      return false;
+  }
+  return true;
+}
+
+
+// **************************************************************
+/* https://stackoverflow.com/a/54336178/13794189 */
+
+String addThousandSeparators(std::string value, char thousandSep, char decimalSep , char sourceDecimalSep){
+    int len = value.length();
+    int negative = ((len && value[0] == '-') ? 1: 0);
+    int dpos = value.find_last_of(sourceDecimalSep);
+    int dlen = 3 + (dpos == std::string::npos ? 0 : (len - dpos));
+
+    if (dpos != std::string::npos && decimalSep != sourceDecimalSep) {
+        value[dpos] = decimalSep;
+    }
+
+    while ((len - negative) > dlen) {
+        value.insert(len - dlen, 1, thousandSep);
+        dlen += 4;
+        len += 1;
+    }
+    return String(value.c_str() );
+}

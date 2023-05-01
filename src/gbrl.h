@@ -10,27 +10,21 @@
     private:
       mSerial* mserial=nullptr;
       INTERFACE_CLASS* interface=nullptr;
+      MATURITY_CLASS* maturity=nullptr;
       M_WIFI_CLASS* mWifi=nullptr;
-
-      String selected_menu;
-      String selected_sub_menu;
-      String wifi_ssid;
-      String wifi_pwd;
-
-      void firmware(String $BLE_CMD, String commType);
-      void helpCommands(String commType);
-      void history(String commType);
-      void runtime(String commType);
-      void powerManagement(String $BLE_CMD, String commType);
-      void plug_status(String commType);
-      void debug_commands(String $BLE_CMD, String commType);
-      void wifi_commands(String $BLE_CMD, String commType);
-      void change_device_name(String $BLE_CMD, String commType);
-      String outputWIFInetworkList();
+      
+   // GBRL commands  *********************************************
+      bool firmware(String $BLE_CMD, uint8_t sendTo );
+      bool helpCommands( uint8_t sendTo );
+      bool runtime( uint8_t sendTo  );
+      bool powerManagement(String $BLE_CMD, uint8_t sendTo );
+      bool plug_status( uint8_t sendTo  );
+      bool debug_commands(String $BLE_CMD, uint8_t sendTo  );
+      
     public:
       GBRL();
-      void init(INTERFACE_CLASS* interface, mSerial* mserial);
-      void commands(String $BLE_CMD, String commType);
+      void init(INTERFACE_CLASS* interface, MATURITY_CLASS* maturity, mSerial* mserial);
+      bool commands(String $BLE_CMD, uint8_t sendTo );
  
 };
 

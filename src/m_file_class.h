@@ -18,8 +18,8 @@ class FILE_CLASS  {
 
   public:
 
-    FILE_CLASS(); 
-    void init( String partitionName,  mSerial* mserial, ONBOARD_LED_CLASS* onboardLED);
+    FILE_CLASS(mSerial* mserial); 
+    bool init( fs::FS &fs, String partitionName,  uint8_t maxFiles,  mSerial* mserial, ONBOARD_LED_CLASS* onboardLED);
     void partition_info();
 
     void storage_list_files(fs::FS &fs);

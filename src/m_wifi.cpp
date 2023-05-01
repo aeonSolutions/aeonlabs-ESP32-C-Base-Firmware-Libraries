@@ -1,6 +1,8 @@
 #include "m_wifi.h"
 #include "time.h"
 #include "ESP32Time.h"
+#include "manage_mcu_freq.h"
+
 
 #ifndef ESP32PING_H
   #include <ESP32Ping.h>
@@ -14,11 +16,14 @@ M_WIFI_CLASS::M_WIFI_CLASS(){
 
 // **********************************************
 void M_WIFI_CLASS::init(INTERFACE_CLASS* interface, mSerial* mserial, ONBOARD_LED_CLASS* onboardLED){
-    this->interface=interface;
     this->mserial=mserial;
+    this->mserial->printStr("init wifi ...");
+    this->interface=interface;
     this->onboardLED=onboardLED;
     this->wifiMulti= new WiFiMulti();
     this->HTTP_TTL= 20000; // 20 sec TTL
+    this->lastTimeWifiConnectAttempt=millis();
+    this->mserial->printStrln("done");
 }
 
 // ************************************************
@@ -26,9 +31,10 @@ void M_WIFI_CLASS::init(INTERFACE_CLASS* interface, mSerial* mserial, ONBOARD_LE
 bool M_WIFI_CLASS::start(uint32_t  connectionTimeout, uint8_t numberAttempts){
     this->connectionTimeout=connectionTimeout;
     
-    if (this->interface->config.ssid[0] == "" ){
-        this->mserial->printStrln("You need to add a wifi network first", this->mserial->DEBUG_TYPE_ERRORS);
-        return false;
+    if (interface->getNumberWIFIconfigured() == 0 && ( millis() - this->lastTimeWifiConnectAttempt > 60000) ){
+      this->lastTimeWifiConnectAttempt=millis();
+      this->mserial->printStrln("WIFI: You need to add a wifi network first", this->mserial->DEBUG_TYPE_ERRORS);
+      return false;
     }
     
     this->wifiMulti= new WiFiMulti();
@@ -39,9 +45,9 @@ bool M_WIFI_CLASS::start(uint32_t  connectionTimeout, uint8_t numberAttempts){
           this->wifiMulti->addAP(this->interface->config.ssid[i].c_str(), this->interface->config.password[i].c_str());        
     }
     this->connect2WIFInetowrk(numberAttempts);
+    this->lastTimeWifiConnectAttempt=millis();
     return true;
 }
-
 
 
 // **************************************************
@@ -50,7 +56,7 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
   if (WiFi.status() == WL_CONNECTED)
     return true;
   
-  if (this-.interface->getNumberWIFIconfigured() == 0){
+  if (this->interface->getNumberWIFIconfigured() == 0){
     this->mserial->printStrln("You need to add a wifi network first", this->mserial->DEBUG_TYPE_ERRORS);
     return false;
   }
@@ -62,13 +68,12 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
   int cnt = 0;        
   uint8_t statusWIFI=WL_DISCONNECTED;
   
-
+  this->mserial->printStr("Connecting ( "+ String(cnt+1) + ") : ");
   while (statusWIFI != WL_CONNECTED) {
     // Connect to Wi-Fi using wifiMulti (connects to the SSID with strongest connection)
-    this->mserial->printStrln("Connection attempt "+ String(cnt+1) + " ...");
+    this->mserial->printStr( "# " );
     if(this->wifiMulti->run(this->connectionTimeout) == WL_CONNECTED) {
-        this->mserial->printStrln("");
-        this->mserial->printStrln("WiFi connected");
+        this->mserial->printStrln("\nWiFi connected");
         this->mserial->printStrln("IP address: ");
         this->mserial->printStrln(String(WiFi.localIP()));
         this->mserial->printStr(String(WiFi.SSID()));
@@ -78,13 +83,14 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
         statusWIFI = WiFi.waitForConnectResult();
         this->mserial->printStrln("("+String(statusWIFI)+"): "+get_wifi_status(statusWIFI));
         this->WIFIconnected=true;
+        this->mserial->printStr( "." );
         return true;
     }
     
     cnt++;
     if (cnt == numberAttempts){
-        this->mserial->printStrln("");
-        this->mserial->printStrln("Could not connect to a WIFI network after " + String(numberAttempts) + " attempts");
+        this->mserial->printStr( "." );
+        this->mserial->printStrln("\nCould not connect to a WIFI network after " + String(numberAttempts) + " attempts\n");
         this->WIFIconnected=false;
         return false;       
     }
@@ -92,6 +98,16 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
   
   return true;
 }
+
+// ********************************************************
+ void M_WIFI_CLASS::resumeStandbyMode(){
+    WiFi.disconnect(true);
+    if (this->interface->BLE_IS_DEVICE_CONNECTED == false){
+      this->interface->$espunixtimeDeviceDisconnected=millis();
+      //WiFi.mode(WIFI_OFF);
+      changeMcuFreq(interface, this->interface->MIN_MCU_FREQUENCY);
+    }   
+ }
 
 // ********************************************************
 String M_WIFI_CLASS::get_wifi_status(int status){
@@ -118,12 +134,12 @@ void M_WIFI_CLASS::WIFIscanNetworks(){
   if (WiFi.status() == WL_CONNECTED)
     return;
     
-  // WiFi.scanNetworks will return the number of networks found
+
   int n = WiFi.scanNetworks();
   if (n == 0) {
-    this->mserial->printStrln("no networks found");
+    this->mserial->printStrln("no WIFI networks found\n");
   } else {
-   this-> mserial->printStr(String(n));
+   this-> mserial->printStr("\n" + String(n));
     this->mserial->printStrln(" WiFi Networks found:");
     for (int i = 0; i < n; ++i) {
       // Print SSID and RSSI for each network found
@@ -263,13 +279,146 @@ void M_WIFI_CLASS::updateInternetTime(){
     this->mserial->printStrln("Failed to obtain Internet Time. Current System Time is " + String(this->interface->rtc.getDateTime(true)) , this->mserial->DEBUG_TYPE_ERRORS);
     return;
   }else{
+    this->mserial->printStr("Internet Time is ");
     Serial.println(&this->interface->timeinfo, "%A, %B %d %Y %H:%M:%S");
-    
-    this->interface->rtc.setTime(this->interface->timeinfo.tm_hour, this->interface->timeinfo.tm_min, this->interface->timeinfo.tm_sec,
-                                  this->interface->timeinfo.tm_mday, this->interface->timeinfo.tm_mon,this->interface->timeinfo.tm_year); 
 
-    this->mserial->printStrln("Internet Time is: " + String(this->interface->rtc.getDateTime(true)));
+    this->interface->rtc.setTimeStruct(this->interface->timeinfo); 
+
+    //this->interface->rtc.setTime(this->interface->timeinfo.tm_hour, this->interface->timeinfo.tm_min, this->interface->timeinfo.tm_sec,
+    //                              this->interface->timeinfo.tm_mday, this->interface->timeinfo.tm_mon,this->interface->timeinfo.tm_year); 
+
+    this->mserial->printStrln("Local Time is: " + String(this->interface->rtc.getDateTime(true)));
   }
 }
 
-// ***********************************************************
+   // GBRL commands  *********************************************
+   // ***********************************************************
+bool M_WIFI_CLASS::gbrl_commands(String $BLE_CMD, uint8_t sendTo ){
+  String dataStr="";
+
+  if($BLE_CMD=="$?" || $BLE_CMD=="$help"){
+      return  this->helpCommands( sendTo );
+  }else if($BLE_CMD=="$view dn" ){
+      this->interface->sendBLEstring( "The devie BLE name is " + this->interface->config.DEVICE_BLE_NAME + "\n",  sendTo ); 
+      return true; 
+  }else if($BLE_CMD.indexOf("$set dn ")>-1){
+      return this->change_device_name($BLE_CMD,   sendTo );
+  }
+
+  return this->wifi_commands( $BLE_CMD,   sendTo );
+}
+
+// *********************************************************
+ bool M_WIFI_CLASS::helpCommands(uint8_t sendTo ){
+    String dataStr="Device Connectivity Commands:\n" \
+
+                    "$set dn [name]                     - Set device BLE name (max 20 chars)\n" \
+                    "$view dn                           - View device BLE name\n" \
+                    "\n" \
+                    "$wifi status                       - View WIFI status\n" \
+                    "$wifi networks                     - View configured WIFI networks\n" \
+                    "$wifi ssid                         - Add WIFI network\n" \
+                    "$wifi clear                        - Clear all WIFI credentials\n\n";
+
+    this->interface->sendBLEstring( dataStr,  sendTo ); 
+    return false; 
+ }
+
+ // *********************************************************
+bool M_WIFI_CLASS::wifi_commands(String $BLE_CMD, uint8_t sendTo ){
+  String dataStr="";
+  if($BLE_CMD=="$wifi status"){
+      dataStr= "Current WIFI status:" + String( char(10));
+      dataStr += "     IP     : " + WiFi.localIP().toString() + "\n";
+      dataStr +=  "    Gateway: " + WiFi.gatewayIP().toString() + "\n\n";
+      this->interface->sendBLEstring( dataStr,  sendTo ); 
+      return true;
+  }
+  
+  if($BLE_CMD=="$wifi clear"){
+      dataStr= "All WIFI credentials were deleted." + String( char(10));
+      this->interface->clear_wifi_networks();
+      this->interface->sendBLEstring( dataStr,  sendTo ); 
+      return true;
+  }
+// .....................................................................................
+  if (this->selected_menu=="$wifi pwd"){   
+    this->selected_menu = "wifi pwd completed";
+    String ssid = this->wifi_ssid;
+    String pwd;
+    String mask="";
+    if ( $BLE_CMD == "none"){
+      pwd = "";
+      mask= "no passowrd";
+    }else{
+      pwd = $BLE_CMD;
+      mask = "**********";
+    }
+    this->interface->add_wifi_network(  ssid, pwd );
+    this->interface->saveSettings();
+    
+    dataStr= mask + "\n";
+      Serial.println("save 21");
+  }
+
+  if (this->selected_menu=="wifi pwd completed" || $BLE_CMD=="$wifi networks"){
+    this->selected_menu = ""; 
+    dataStr += "WIFI Netwrok List: " + String( char(10));
+      Serial.println("save 22");
+    for(int i=0; i<5 ; i++){
+      if ( this->interface->config.ssid[i] != ""){
+        dataStr += this->interface->config.ssid[i];
+        if ( this->interface->config.password[i] != ""){
+          dataStr += " ,  pass: [Y]/N\n";
+        }else{
+          dataStr += " ,  pass: Y/[N]\n";
+        }
+      }
+    }
+    dataStr += "\n";
+  Serial.println("save 23");
+    this->interface->sendBLEstring( dataStr,  sendTo ); 
+      Serial.println("save 24");
+    return true;
+  }
+  // ................................................................
+  if (this->selected_menu=="$wifi ssid"){  
+      this->wifi_ssid = $BLE_CMD;
+      this->selected_menu = "$wifi pwd";
+      dataStr=  this->wifi_ssid + "\nNetwork password? " + String( char(10));
+      this->interface->sendBLEstring( dataStr,  sendTo ); 
+      return true;
+  }
+
+  if($BLE_CMD=="$wifi ssid"){
+    this->selected_menu = "$wifi ssid";
+    dataStr= "Network name (SSID) ?" + String( char(10));
+    this->interface->sendBLEstring( dataStr,  sendTo ); 
+    return true;
+  }
+
+  if($BLE_CMD.indexOf("$wifi ")>-1){
+    dataStr= "Invalid WIFI command" + String( char(10));
+    this->interface->sendBLEstring( dataStr,  sendTo ); 
+    return true;
+  }
+
+  return false;
+}
+
+// *******************************************************
+
+bool M_WIFI_CLASS::change_device_name(String $BLE_CMD, uint8_t sendTo ){
+  String dataStr="";
+  String value = $BLE_CMD.substring(8, $BLE_CMD.length());
+  this->interface->config.DEVICE_BLE_NAME= value;
+  if (value.length()>20){
+    dataStr="max 20 chars allowed\n";
+  }else if (this->interface->saveSettings()){
+    dataStr = "The Device name is now: "+ value + "\n";
+  }else{
+    dataStr = "Error saving settings \n";
+  }
+  this->interface->sendBLEstring( dataStr,  sendTo );  
+  return true;
+}

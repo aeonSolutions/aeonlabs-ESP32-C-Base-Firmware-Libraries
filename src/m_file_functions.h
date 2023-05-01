@@ -7,5 +7,7 @@
 
     tm CompileDateTime(char const *dateStr, char const *timeStr);
 
+    bool isStringAllSpaces(String str);
 
+    String addThousandSeparators(std::string value, char thousandSep = ',', char decimalSep = '.', char sourceDecimalSep = '.');
   #endif

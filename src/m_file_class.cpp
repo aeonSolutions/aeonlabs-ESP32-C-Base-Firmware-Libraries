@@ -1,23 +1,63 @@
 #include "m_file_class.h"
 #include <esp_partition.h>
 #include "FFat.h"
+#include "mserial.h"
+#include "m_file_functions.h"
 
-FILE_CLASS::FILE_CLASS(){}
+FILE_CLASS::FILE_CLASS(mSerial* mserial){
+  this->mserial = mserial;
+}
 
-void FILE_CLASS::init(String partitionName,  mSerial* mserial, ONBOARD_LED_CLASS* onboardLED){
+bool FILE_CLASS::init(fs::FS &fs, String partitionName, uint8_t maxFiles, mSerial* mserial, ONBOARD_LED_CLASS* onboardLED){
     this->mserial=mserial;
     this->onBoardLED=onBoardLED;
- 
+    
+    //this->mserial->printStrln("init drive 1...");
+    //this->mserial->printStrln("Onboard LED RED:" +  String(this->onBoardLED->led[0] ) );
+    //this->mserial->printStrln("init drive 2...");
+    //this->mserial->printStrln("Onboard LED RED:" + String(this->onBoardLED->led[0]) + " = " + String(this->onBoardLED->LED_RED ) );
+    //this->mserial->printStrln("init drive 3...");
+
+    if(true==FFat.begin( 0, "", maxFiles , "storage")){ // !! Only allow one file to be open at a time instead of 10, saving 9x4 - 36KB of RAM          
+    this->mserial->printStrln( "Drive init...done.");
+//      this->onBoardLED->led[0] = this->onBoardLED->LED_GREEN;
+ //     this->onBoardLED->statusLED(100, 1);
+    }else{
+      if(FFat.format(1, "storage")){
+        this->mserial->printStrln("Drive formated sucessfully!");
+      //  this->onBoardLED->led[0] = this->onBoardLED->LED_RED;
+      //  this->onBoardLED->led[0] = this->onBoardLED->LED_GREEN;
+      //  this->onBoardLED->statusLED(100, 2);
+        if(true==FFat.begin( 0, "", 10 , "storage")){
+          this->mserial->printStrln( "Drive init...done.");
+       // this->onBoardLED->led[0] = this->onBoardLED->LED_GREEN;
+       // this->onBoardLED->statusLED(100, 1);
+        }else{
+          this->mserial->printStrln("Drive Mount Failed");
+          return false;
+        }      
+      }else{
+        this->mserial->printStrln("Drive Format Failed");
+     //   this->onBoardLED->led[0] = this->onBoardLED->LED_RED;
+     //   this->mserial->printStrln("here 1");
+     //   this->onBoardLED->statusLED(100, 5);
+     //   this->mserial->printStrln("here 2");
+        return false;
+      }
+    }
+
     this->mserial->printStrln("File system mounted");
-    this->mserial->printStrln("Total space: " + String(FFat.totalBytes()) );
-    this->mserial->printStrln("Free space: " + String(FFat.freeBytes()) );
+    this->mserial->printStrln("Total space: " + addThousandSeparators( std::string( String(FFat.totalBytes() ).c_str() ) ) + " bytes");
+    this->mserial->printStrln("Free space: " + addThousandSeparators( std::string( String(FFat.freeBytes() ).c_str() ) )  + " bytes\n" );
+    return true;
 }
 
 // ************************************************************
 void FILE_CLASS::partition_info(){
-    Serial.println("Partition list:");
-    partloop(ESP_PARTITION_TYPE_APP);
+    this->mserial->printStrln("Storage Partition list:");
     partloop(ESP_PARTITION_TYPE_DATA);
+    partloop(ESP_PARTITION_TYPE_APP);
+
 }
 
 void FILE_CLASS::partloop(esp_partition_type_t part_type) {
@@ -27,8 +67,9 @@ void FILE_CLASS::partloop(esp_partition_type_t part_type) {
   while (iterator) {
      next_partition = esp_partition_get(iterator);
      if (next_partition != NULL) {
-        Serial.printf("partition addr: 0x%06x; size: 0x%06x; label: %s\n", next_partition->address, next_partition->size, next_partition->label);  
-     iterator = esp_partition_next(iterator);
+      String dataStr = "partition addr: 0x" +String(next_partition->address, HEX) + "    size: " + addThousandSeparators( std::string( String(next_partition->size, DEC).c_str() ) )  + " bytes     label: " + String(next_partition->label) ;  
+      this->mserial->printStrln(dataStr);
+      iterator = esp_partition_next(iterator);
     }
   }
 }

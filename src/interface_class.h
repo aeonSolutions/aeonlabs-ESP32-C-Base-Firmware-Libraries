@@ -8,6 +8,8 @@
 #include "mserial.h"
 #include "FFat.h"
 #include "onboard_led.h"
+#include <ArduinoJson.h>
+#include <HardwareSerial.h>
 
 #ifndef INTERFACE_CLASS_DEF
   #define INTERFACE_CLASS_DEF
@@ -30,10 +32,9 @@ class INTERFACE_CLASS {
     bool LIGHT_SLEEP_EN;
 
     typedef struct{
-          // ********************** firmware update ****************
-      String firmwareUpdate;
-      String firmware_version; // ToDo: move outside settings - needs to be a static const value
-      
+      // firmmware update  ***************************
+      String firmwareUpdate; // no, manual, auto
+
       // ******************* Power management **************
       bool isBatteryPowered;
       bool POWER_PLUG_ALWAYS_ON;
@@ -69,15 +70,29 @@ class INTERFACE_CLASS {
 
     config_strut config;
 
+   // firmmware update  ***************************
+    bool forceFirmwareUpdate;
+    String firmware_version;
+
     // IO Pin assignment *******************************
     int8_t EXT_PLUG_PWR_EN;
     bool POWER_PLUG_IS_ON;
+
+    int8_t I2C_SDA_IO_PIN;
+    int8_t I2C_SCL_IO_PIN;
 
    // ******************** Battery  **************************
     static constexpr int8_t BATTERY_ADC_IO = BATTERY_ADC_IO_NUM;
     Pangodream_18650_CL BL = Pangodream_18650_CL( BATTERY_ADC_IO_NUM, 1.7, 20);
 
     // ******************* MCU frequency  *********************
+    //function takes the following frequencies as valid values:
+    //  240, 160, 80    <<< For all XTAL types
+    //  40, 20, 10      <<< For 40MHz XTAL
+    //  26, 13          <<< For 26MHz XTAL
+    //  24, 12          <<< For 24MHz XTAL
+    // For More Info Visit: https://deepbluembedded.com/esp32-change-cpu-speed-clock-frequency/
+
     int8_t SAMPLING_FREQUENCY ; 
 
     int WIFI_FREQUENCY ; // min WIFI MCU Freq is 80-240
@@ -91,23 +106,23 @@ class INTERFACE_CLASS {
      BLECharacteristic *pCharacteristicTX;  
      bool BLE_IS_DEVICE_CONNECTED; 
    
-    // RTC SETUP *******************
-    ESP32Time rtc;  // offset in seconds GMT
 
+   // Task scheduler *********************************
     unsigned long $espunixtime;
     unsigned long $espunixtimePrev;
     unsigned long $espunixtimeStartMeasure;
     unsigned long $espunixtimeDeviceDisconnected;
     String measurement_Start_Time;
 
-    // RTC: NTP server ***********************
+       // RTC SETUP *******************
+    ESP32Time rtc;  // offset in seconds GMT
     struct tm timeinfo;
     long NTP_last_request;
 
     // Geo Location  ******************************
     String InternetIPaddress;
-    StaticJsonDocument <512> geoLocationInfoJson;
     String requestGeoLocationDateTime;
+    JsonObject geoLocationInfoJson;
 
     // Sensors ****************************************
     int8_t NUMBER_OF_SENSORS; 
@@ -122,22 +137,25 @@ class INTERFACE_CLASS {
     // functions and methods  ****************************
     INTERFACE_CLASS();
 
-    mSerial* mserial=nullptr;
-    ONBOARD_LED_CLASS* onBoardLED=nullptr;
-    
+    mSerial* mserial;
+    ONBOARD_LED_CLASS* onBoardLED;
+    HardwareSerial* UARTserial;
+
     void init(mSerial* mserial, bool DEBUG_ENABLE);
     void init_BLE(BLECharacteristic *pCharacteristicTX);
+    void settings_defaults();
 
     bool loadSettings(fs::FS &fs=FFat );
     bool saveSettings(fs::FS &fs=FFat );
 
-    void sendBLEstring(String message="", String commType="ble");
+    void sendBLEstring(String message="",  uint8_t sendTo = mSerial::DEBUG_TO_BLE );
 
     void init_NTP_Time(char* ntpServer_="pool.ntp.org", long gmtOffset_sec_=0, int daylightOffset_sec=3600, long NTP_request_interval_=64000);
 
     void add_wifi_network( String ssid, String password);
     void clear_wifi_networks();
     int getNumberWIFIconfigured();
+    void setNumberWIFIconfigured(uint8_t num);
 };
 
 #endif

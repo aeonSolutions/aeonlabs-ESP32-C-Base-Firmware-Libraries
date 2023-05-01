@@ -1,7 +1,9 @@
-#include <SHT31.h>
+
 #include "SparkFunLSM6DS3.h"
 #include "mserial.h"
 #include "interface_class.h"
+#include <Wire.h>
+#include "AHT20.h"
 
 #ifndef ONBOARD_SENSORS_DEF
   #define ONBOARD_SENSORS_DEF
@@ -13,12 +15,12 @@ class ONBOARD_SENSORS {
     INTERFACE_CLASS* interface=nullptr;
     mSerial* mserial= nullptr;
 
-    //SHT31 sensor  **********************************
-    uint8_t SHT31_ADDRESS= 0x44; //default address is 0x44
-    long int SHTFREQ = 100000ul;
-    bool SHTsensorAvail;
-    float sht_temp, sht_humidity;
-    SHT31 sht31=SHT31();
+    //AHT20 sensor  **********************************
+    bool AHTsensorAvail;
+    float aht_temp, aht_humidity;
+    uint8_t AHT20_ADDRESS;
+    AHT20* aht20;
+
 
     // LSM6DS3 motion sensor  ******************************
     uint8_t LSM6DS3_ADDRESS= 0x6B; // default address is 0x6B
@@ -43,15 +45,15 @@ class ONBOARD_SENSORS {
     ONBOARD_SENSORS();
     void I2Cscanner();
     void init(INTERFACE_CLASS* interface, mSerial* mserial);
-    void startSHT();
+    void startAHT();
     void startLSM6DS3();
     void request_onBoard_Sensor_Measurements();
     void getLSM6DS3sensorData();
     bool motionDetect();
     bool motionShakeDetected(uint8_t numShakes);
 
-    void commands(String $BLE_CMD, String commType);
-    void helpCommands(String commType);
+    bool commands(String $BLE_CMD, uint8_t sendTo);
+    bool helpCommands(uint8_t sendTo);
 
 };
 

@@ -10,6 +10,10 @@ ONBOARD_LED_CLASS::ONBOARD_LED_CLASS(){
   this->LED_RED_CH = 0;
   this->LED_BLUE_CH = 1;
   this->LED_GREEN_CH = 2;
+  
+  this->led[0]=  0;
+  this->led[0]=  0;
+  this->led[0]=  0;
 };
 
 void ONBOARD_LED_CLASS::init(){
@@ -17,11 +21,6 @@ void ONBOARD_LED_CLASS::init(){
   ledcSetup(this->LED_RED_CH, 4000, 8); // 12 kHz PWM, 8-bit resolution
   ledcSetup(this->LED_BLUE_CH, 4000, 8); // 12 kHz PWM, 8-bit resolution
   
-  this->led[0]=  0;
-  this->led[0]=  0;
-  this->led[0]=  0;
-
-  //turnOffAllStatusLED();
 }
 
 void ONBOARD_LED_CLASS::turnOffAllStatusLED(){

@@ -1,21 +1,31 @@
+#include <ArduinoJson.h>
+#include "m_geolocation.h"
+#include <WiFiMulti.h>
+#include "HTTPClient.h"
+#include "manage_mcu_freq.h"
 
 
 GEO_LOCATION_CLASS::GEO_LOCATION_CLASS(){
 }
 
 // **********************************************
-void GEO_LOCATION_CLASS::init(INTERFACE_CLASS* interface, mSerial* mserial, ONBOARD_LED_CLASS* onboardLED){
-    this->interface=interface;
-    this->mserial=mserial;
-    this->onboardLED=onboardLED;
+void GEO_LOCATION_CLASS::init(INTERFACE_CLASS* interface,  M_WIFI_CLASS* mWifi, mSerial* mserial ){
+  this->mserial=mserial;
+  this->mserial->printStr("init GeoLocation ...");
+  this->interface=interface;
+  this-> mWifi = mWifi;
+  
+  this->REQUEST_DELTA_TIME  = 10*60*1000; // 10 min 
+  this->$espunixtimePrev= millis(); 
+  this->mserial->printStrln("done.");
 }
 
 // *************************************************************************
-String GEO_LOCATION_CLASS::get_ip_address(){
+void GEO_LOCATION_CLASS::get_ip_address(){
     if(WiFi.status()== WL_CONNECTED){
       HTTPClient http;
 
-      String serverPath = "https://api.ipify.org";
+      String serverPath = "http://api.ipify.org";
       this->mserial->printStrln("request external IP address");
       http.begin(serverPath.c_str());      
       // Send HTTP GET request
@@ -32,17 +42,38 @@ String GEO_LOCATION_CLASS::get_ip_address(){
       http.end();
     }
     else {
-      Serial.println("WiFi Disconnected");
+      //Serial.println("WiFi Disconnected");
     }
 }
 
 // *************************************************************************
 void GEO_LOCATION_CLASS::get_ip_geo_location_data(String ipAddress){
-    if(WiFi.status()== WL_CONNECTED){
+  
+  if ( ( millis() - this->$espunixtimePrev) < this->REQUEST_DELTA_TIME )
+    return;
+    
+
+  if (this->interface->CURRENT_CLOCK_FREQUENCY <= this->interface->WIFI_FREQUENCY )
+      changeMcuFreq(this->interface, this->interface->WIFI_FREQUENCY);
+    
+  if (WiFi.status() != WL_CONNECTED){
+      this->mWifi->start(10000, 5); // TTL , n attempts 
+  }
+  
+  if (WiFi.status() != WL_CONNECTED){
+      this->mserial->printStrln("unable to connect to WIFI.");
+      return;
+  }
+  this->$espunixtimePrev= millis();
+  
+  if(WiFi.status()== WL_CONNECTED){
         HTTPClient http;
         String serverPath = "http://ip-api.com/json/";
         if (ipAddress==""){
-        serverPath += this->interface->InternetIPaddress;
+          if (this->interface->InternetIPaddress==""){
+            this->get_ip_address();
+          }
+          serverPath += this->interface->InternetIPaddress;
         }else{
             serverPath += ipAddress;
         }
@@ -56,13 +87,15 @@ void GEO_LOCATION_CLASS::get_ip_geo_location_data(String ipAddress){
             Serial.println(httpResponseCode);
             String JSONpayload = http.getString();
             Serial.println(JSONpayload);
-
+          
+            StaticJsonDocument <512> geoLocationInfoJsonStatic;
             // Parse JSON object
-            DeserializationError error = deserializeJson(this->interface->geoLocationInfoJson, JSONpayload);
+            DeserializationError error = deserializeJson(geoLocationInfoJsonStatic, JSONpayload);
             if (error) {
                 Serial.print("Error deserializing JSON");
-                this->geoLocationInfoJson=NULL;
+                //this->interface->geoLocationInfoJson=nullptr;
             }else{
+                this->interface->geoLocationInfoJson = geoLocationInfoJsonStatic[0];
                 this->interface->requestGeoLocationDateTime= String( this->interface->rtc.getDateTime(true) );
                 /*
                 {
@@ -91,8 +124,11 @@ void GEO_LOCATION_CLASS::get_ip_geo_location_data(String ipAddress){
         // Free resources
         http.end();
     }else {
-      Serial.println("WiFi Disconnected");
+      //Serial.println("WiFi Disconnected");
     }
+  this->mWifi->resumeStandbyMode();
 }
 
 // *************************************************************************
+
+

@@ -3,26 +3,20 @@
 #include <semphr.h>
 
 // **************************** == Serial Class == ************************
-mSerial::mSerial(bool DebugMode) {
-      this->DEBUG_EN = DebugMode;
+mSerial::mSerial(bool DebugMode, HardwareSerial* UARTserial) {
+  this->DEBUG_EN = DebugMode;
+  this->UARTserial = UARTserial;
+  this->MemLockSemaphoreSerial = xSemaphoreCreateMutex();
+  this->MemLockSemaphoreUSBSerial = xSemaphoreCreateMutex();
 
-      this->MemLockSemaphoreSerial = xSemaphoreCreateMutex();
+  this->LogFilename="sccd_log.txt";
 
-      this->DEBUG_TYPE_VERBOSE = 100;
-      this->DEBUG_TYPE_ERRORS = 101;
+  this->DEBUG_EN = 1; // ON / OFF
+  this->DEBUG_TO = this->DEBUG_TO_UART ; // UART, BLE   
+  this->DEBUG_TYPE = this->DEBUG_TYPE_VERBOSE; // Verbose // Errors 
+  this->DEBUG_SEND_REPOSITORY = 0; // YES/ NO
 
-      this->DEBUG_TO_BLE = 10;
-      this->DEBUG_TO_UART = 11;
-      this->DEBUG_TO_BLE_UART = 12;
-
-      this->LogFilename="sccd_log.txt";
-
-      this->DEBUG_EN = 1; // ON / OFF
-      this->DEBUG_TO = this->DEBUG_TO_UART ; // UART, BLE   
-      this->DEBUG_TYPE = this->DEBUG_TYPE_VERBOSE; // Verbose // Errors 
-      this->DEBUG_SEND_REPOSITORY = 0; // YES/ NO
-
-      this->ble = true;
+  this->ble = true;
 }
 
 // ------------------------------------------------------
@@ -33,34 +27,42 @@ void mSerial::setDebugMode(boolean stat){
 // ----------------------------------------------------
 void mSerial::start(int baud) {
   if (this->DEBUG_EN) {
-    Serial.begin(baud);
-    Serial.println("mSerial started...");
+    Serial.begin(115200);
+    this->UARTserial->begin(baud);
+    Serial.println("mSerial started on the USB PORT.");
+    
+    this->UARTserial->println("mSerial started on the UART PORT.");
   }
 }
 
 // ---------------------------------------------------------
-void mSerial::printStrln(String str, uint8_t debugType) {
-
-  this->log(str + String( char(10) ), debugType );
-
+void mSerial::printStrln(String str, uint8_t debugType, uint8_t DEBUG_TO ) {
+  this->log(str + String( char(10) ), DEBUG_TO, debugType );
 }
 
 // ----------------------------------------------------
-void mSerial::printStr(String str, uint8_t debugType) {
-  this->log(str, debugType);
+void mSerial::printStr(String str, uint8_t debugType, uint8_t DEBUG_TO ) {
+  this->log(str, debugType, DEBUG_TO );
 }
 
 // ----------------------------------------------------------
-  void mSerial::log( String str, uint8_t debugType){
+  void mSerial::log( String str, uint8_t debugType, uint8_t DEBUG_TO ){
     if (this->DEBUG_EN && ( this->DEBUG_TYPE == debugType || this->DEBUG_TYPE == this->DEBUG_TYPE_VERBOSE ) ) {
-      if ( ( this->DEBUG_TO == this->DEBUG_TO_BLE || this->DEBUG_TO == this->DEBUG_TO_BLE_UART ) && this->ble ){
-          this->sendBLEstring(str + String( char(10) ) );
+      if ( ( this->DEBUG_TO == this->DEBUG_TO_BLE || this->DEBUG_TO == this->DEBUG_TO_BLE_UART )  ){
+          if (this->ble)
+            this->sendBLEstring(str + String( char(10) ) );
       }
 
-      if ( this->DEBUG_TO == this->DEBUG_TO_UART || this->DEBUG_TO == this->DEBUG_TO_BLE_UART){ // debug to UART
+      if ( this->DEBUG_TO == this->DEBUG_TO_UART || this->DEBUG_TO == this->DEBUG_TO_BLE_UART || this->DEBUG_TO == this->DEBUG_BOTH_USB_UART){ // debug to UART
         xSemaphoreTake(MemLockSemaphoreSerial, portMAX_DELAY); // enter critical section
-          Serial.print(str);
+          this->UARTserial->print(str);
         xSemaphoreGive(MemLockSemaphoreSerial); // exit critical section    
+      }
+
+      if ( this->DEBUG_TO == this->DEBUG_TO_USB || this->DEBUG_TO == this->DEBUG_TO_BLE_UART  || this->DEBUG_TO == this->DEBUG_BOTH_USB_UART ){ // debug to USB
+        xSemaphoreTake(MemLockSemaphoreUSBSerial, portMAX_DELAY); // enter critical section
+          Serial.print(str);
+        xSemaphoreGive(MemLockSemaphoreUSBSerial); // exit critical section    
       }
 
       if (this->DEBUG_SEND_REPOSITORY){
@@ -82,6 +84,21 @@ bool mSerial::readSerialData(){
     return false;
   }
 }
+
+// -----------------------------------------------------------------
+bool mSerial::readUARTserialData(){
+  this->serialDataReceived = "";
+  if( this->UARTserial->available() ){ // if new data is coming from the HW Serial
+    while(this->UARTserial->available()){
+      char inChar = UARTserial->read();
+      this->serialDataReceived += inChar;
+    }
+    return true;
+  }else{
+    return false;
+  }
+}
+
   // --------------------------------------------------------------------------
 bool mSerial::reinitialize_log_file(fs::FS &fs){
     if (fs.exists( "/" +  this->LogFilename ) ){
@@ -115,22 +132,30 @@ bool mSerial::readLog(fs::FS &fs){
 }
 
 // -------------------------------------------------------------------------------
-void mSerial::sendBLEstring(String message){
+void mSerial::sendBLEstring(String message,  uint8_t sendTo){
 // no mSerial output allowed here :: reason loop 
-  
-  Serial.println("Start send BLE message...");
-
+//Serial.println("start sendiing BLE message \" " + message+" \" ");
   float remain= message.length() % 20;
 
   for(int i=0; i<floor(message.length()/20);i++){
-    this->pCharacteristicTX->setValue((message.substring(i*20, (i*20+20) )).c_str());
-    this->pCharacteristicTX->notify();
-    delay(10);
+    if ( this->pCharacteristicTX != nullptr){
+      this->pCharacteristicTX->setValue((message.substring(i*20, (i*20+20) )).c_str());
+      this->pCharacteristicTX->notify();
+      delay(10);
+    }else{
+      Serial.print("mserial send BLE msg nullptr");
+    }
   }
-  Serial.println("end loop send BLE message...");
+  
   if (remain > 0.0){
-    this->pCharacteristicTX->setValue((message.substring( floor(message.length()/20)*20, message.length())).c_str());
-    this->pCharacteristicTX->notify();  
+    if ( this->pCharacteristicTX != nullptr){
+      this->pCharacteristicTX->setValue((message.substring( floor(message.length()/20)*20, message.length())).c_str());
+      this->pCharacteristicTX->notify();  
+    }else{
+      // ToDo serial
+      Serial.print("mserial send BLE msg nullptr");
+    }
   }
-  Serial.println("end send BLE message...");
+delay(20);
+
 }
