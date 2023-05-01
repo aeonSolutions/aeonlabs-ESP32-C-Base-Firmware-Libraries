@@ -37,7 +37,8 @@ Currently it uncludes:
 - Microprocessor Core Frequency Management
 - Some simple Math functions
 - CSV style Files for settings and configuration
-- AT204SHA IC for unique data fingerprint identification on open environments  
+- AT204SHA IC for unique data fingerprint identification on open environments 
+- Dataset upload to a dataverse data repositpry (see www.dataverse.org and also my [C++ API library](https://github.com/aeonSolutions/OpenScience-Dataverse-API-C-library) for dataverse ) 
 
 <br>
 
