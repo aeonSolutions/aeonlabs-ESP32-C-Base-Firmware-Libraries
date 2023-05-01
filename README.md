@@ -37,7 +37,7 @@ Currently it uncludes:
 - Some simple Math functions
 
 
-### Smart Device's Firmware using this code
+### Smart Devices I prototyped and using this code on their OEM firmware versions
 
 - [Smart Concrete Curing Monitoring Device](https://github.com/aeonSolutions/AeonLabs-Monitor-Fresh-Reinforced-concrete-Hardening-Strength-maturity)
 
