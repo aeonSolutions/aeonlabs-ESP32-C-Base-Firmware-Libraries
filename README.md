@@ -38,7 +38,7 @@ Currently it uncludes:
 - Some simple Math functions
 - CSV style Files for settings and configuration
 - AT204SHA IC for unique data fingerprint identification on open environments 
-- Dataset upload to a dataverse data repository (see www.dataverse.org and also my [C++ API library](https://github.com/aeonSolutions/OpenScience-Dataverse-API-C-library) 
+- Dataset upload to a dataverse data repository. More info at www.dataverse.org and also on my [C++ API library](https://github.com/aeonSolutions/OpenScience-Dataverse-API-C-library) .
 
 <br>
 
