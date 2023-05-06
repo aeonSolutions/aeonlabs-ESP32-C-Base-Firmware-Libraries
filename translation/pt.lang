@@ -1,0 +1,11 @@
+{
+	"translation_version"        :   "0.1",   
+	"free_mem"                   :   "Mem Livre",
+	"error_near_pos"             :   "Erro perto da pos",
+	"completed"                  :   "concluido",
+	"done"                       :   "concluido",
+	"err_create_file"            :   "Erro ao criar",
+	"err_open_file"              :   "Erro ao abrir o ficheiro",
+	"wait_moment"                :   "Aguarde um momento",
+	"invalid_input"              :   "Input invalido",
+}
