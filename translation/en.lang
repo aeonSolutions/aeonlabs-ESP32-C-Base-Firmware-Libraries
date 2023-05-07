@@ -7,5 +7,5 @@
 	"err_create_file"            :   "Error creating",
 	"err_open_file"              :   "Error opening file",
 	"wait_moment"                :   "Wait one moment",
-	"invalid_input"              :   "Invalid input",
+	"invalid_input"              :   "Invalid input"
 }
