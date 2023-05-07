@@ -44,10 +44,8 @@ Currently it uncludes:
 
 ## ToDo List
 
-**Smart DAQ Firmware:**
   - Calc MD5 hash of the dataset file yo compare with json result on upload 
   - ✓ ~~OTA firmware update~~
-  - Remove lock on a dataset (by an admin)
   - ✓ ~~Validate Json received on a new dataset upload~~
   - ✓ ~~Load dataset repository metadata~~
   - ✓ ~~Output board startup diagnostics serial stream to a Bluetooth or WIFI data stream~~
@@ -55,13 +53,8 @@ Currently it uncludes:
   - SQLite database to store measured experumental data and upload to a dataverse repository
   - Swarm connectivity to other nearby Smart DAQ devices for experimental data redundancy and sharing (IoE - Internet of Everything). 
   - Blockchain like data storage and exchange of experimental data collected
-  - Experimental Data multiple Signing with multiple unique Fingerprint ID requests to other Smart DAQ devices:
-    - from nearby devices on the same research project
-    - from nearby devices on the same Laboratory
-    - from nearby devices on the same campus
-    - from devices located elsewhere (on the internet) and available to do experimental data signing (obtained from a list of devices registered in a public server) 
+  - Sensor Data multiple Signing with multiple unique Fingerprint ID requests to other Smart DAQ devices
   - ✓ ~~Automatic geolocation of experimental data origins using the wifi network it connects~~
-  - Allow remote query of a device's setup, for instance sensor calibration,  at any time of the day (and night) from the data repository server
   - ✓ ~~Motion Detection of unauthorized handling of a specimen during an ongoing experiment~~
   - ✓ ~~Smart Device Language Pack Downloader and Language Selection~~
   - ✓ ~~Github Certificate of Authority (CA) Updater~~
