@@ -57,7 +57,7 @@ Currently it uncludes:
   - ✓ ~~Automatic geolocation of experimental data origins using the wifi network it connects~~
   - ✓ ~~Motion Detection of unauthorized handling of a specimen during an ongoing experiment~~
   - ✓ ~~Smart Device Language Pack Downloader and Language Selection~~
-  - ✓ ~~Github Certificate of Authority (CA) Updater~~
+  - ✓ ~~Certificate of Authority (CA) Updater~~
 
 <br>
 
