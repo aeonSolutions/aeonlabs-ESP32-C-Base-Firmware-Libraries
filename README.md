@@ -17,6 +17,7 @@
 <br />
 
 # [![CodeFactor](https://www.codefactor.io/repository/github/aeonsolutions/aeonlabs-esp32-c-base-firmware-libraries/badge)](https://www.codefactor.io/repository/github/aeonsolutions/aeonlabs-esp32-c-base-firmware-libraries) ESP32 C++ Base Firmware Libraries
+**current project Total: > 500 work.h**
 
 These are simple C++ class libraries i maintain to speed up firmware code developent on all my ESP32 PCB electonics.
 This is still an early code develpment. Is memory intensive and lacks many code optimizations.
