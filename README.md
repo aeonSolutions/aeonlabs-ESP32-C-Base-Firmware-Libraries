@@ -26,7 +26,6 @@ Currently it uncludes:
 
 - Geolocation over WIFI 
 - Onboard sensors 
-   - SHT3x Temperature & Humidty sensor
    - AHT2x Temperature & Humidty sensor
    - LSM6DS3 motion sensor
 - FFat File managment
