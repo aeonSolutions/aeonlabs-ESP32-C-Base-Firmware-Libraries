@@ -35,7 +35,6 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 #include "Arduino.h"
 #include <math.h>
 #include  "BLECharacteristic.h"
-#include "maturity.h"
 #include "time.h"
 #include "ESP32Time.h"
 #include "sha204_i2c.h"
@@ -45,6 +44,7 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 #include "onboard_led.h"
 #include <ArduinoJson.h>
 #include <HardwareSerial.h>
+#include <semphr.h>
 
 #ifndef INTERFACE_CLASS_DEF
   #define INTERFACE_CLASS_DEF
@@ -62,36 +62,25 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 class INTERFACE_CLASS {
   private:
     uint8_t number_WIFI_networks;
-
-     bool BLE_IS_DEVICE_CONNECTED; 
   
   public:
     bool LIGHT_SLEEP_EN;
 
     typedef struct{
-      // firmmware update  ***************************
-      String firmwareUpdate; // no, manual, auto
-
       // ******************* Power management **************
       bool isBatteryPowered;
       bool POWER_PLUG_ALWAYS_ON;
-
-      // ********************* WIFI *************************
-      bool isWIFIenabled;
-      String ssid[5];
-      String  password[5];
-
-    // RTC: NTP server ***********************
-     String ntpServer;
-     long  gmtOffset_sec; // 3600 for 1h difference
-     int   daylightOffset_sec;
-     long NTP_request_interval;// 64 sec.
 
       // ********************** onboard sensors *********************
       bool onboard_motion_sensor_en;
       bool onboard_temperature_en;
       bool onboard_humidity;
       double MOTION_SENSITIVITY;
+
+      // RTC ****************************
+      long  gmtOffset_sec; // 3600 for 1h difference
+      int   daylightOffset_sec;
+
     // ************* DEBUG *****************
       bool DEBUG_EN; // ON / OFF
       uint8_t DEBUG_TO; // UART, BLE   
@@ -113,9 +102,7 @@ class INTERFACE_CLASS {
   StaticJsonDocument <6000> deviceLangJson;
   StaticJsonDocument <6000> baseLangJson;
 
-   // firmmware update  ***************************
-    bool forceFirmwareUpdate;
-    String firmware_version;
+  String firmware_version;
 
     // IO Pin assignment *******************************
     int8_t EXT_PLUG_PWR_EN;
@@ -146,6 +133,13 @@ class INTERFACE_CLASS {
     int CURRENT_CLOCK_FREQUENCY;
     uint32_t Freq = 0;
     
+    SemaphoreHandle_t McuFreqSemaphore = xSemaphoreCreateMutex();
+    bool McuFrequencyBusy;
+    
+    // ************************** == Lock semaphore == **********************
+  SemaphoreHandle_t MemLockSemaphoreCore1 = xSemaphoreCreateMutex();
+  SemaphoreHandle_t MemLockSemaphoreCore2 = xSemaphoreCreateMutex();
+
    // *********************** BLE **************************
      BLECharacteristic *pCharacteristicTX;  
 
@@ -153,18 +147,12 @@ class INTERFACE_CLASS {
     unsigned long $espunixtime;
     unsigned long $espunixtimePrev;
     unsigned long $espunixtimeStartMeasure;
-    unsigned long $espunixtimeDeviceDisconnected;
     String measurement_Start_Time;
 
        // RTC SETUP *******************
     ESP32Time rtc;  // offset in seconds GMT
     struct tm timeinfo;
-    long NTP_last_request;
 
-    // Geo Location  ******************************
-    String InternetIPaddress;
-    String requestGeoLocationDateTime;
-    StaticJsonDocument <512> geoLocationInfoJson;
 
     // Sensors ****************************************
     int8_t NUMBER_OF_SENSORS; 
@@ -197,10 +185,6 @@ class INTERFACE_CLASS {
 
     void init_NTP_Time(char* ntpServer_="pool.ntp.org", long gmtOffset_sec_=0, int daylightOffset_sec=3600, long NTP_request_interval_=64000);
 
-    bool add_wifi_network( String ssid, String password);
-    void clear_wifi_networks();
-    int getNumberWIFIconfigured();
-    void setNumberWIFIconfigured(uint8_t num);
 
     bool loadDeviceLanguagePack(String country, uint8_t sendTo );
     bool loadBaseLanguagePack(String country, uint8_t sendTo );

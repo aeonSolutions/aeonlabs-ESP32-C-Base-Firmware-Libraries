@@ -77,7 +77,7 @@ void INTERFACE_CLASS::init( mSerial* mserial, bool DEBUG_ENABLE) {
   //this->rtc.setTime(1609459200);  // 1st Jan 2021 00:00:00
   this->rtc.offset = this->config.gmtOffset_sec; // change offset value
   this->rtc.setTimeStruct( CompileDateTime(String(__DATE__ ).c_str(), String(__TIME__).c_str() ) ); 
-  configTime(this->config.gmtOffset_sec, this->config.daylightOffset_sec, this->config.ntpServer.c_str());
+
 }
 
 // ***********************************************************************
@@ -99,9 +99,7 @@ void INTERFACE_CLASS::settings_defaults(){
 
   this->DATA_VALIDATION_KEY = "A9CD7F1B6688159B54BBE862F638FF9D29E0FA5F87C69D27BFCD007814BA69C9";
 
-  this->config.firmwareUpdate="auto";
   this->config.isBatteryPowered=false;
-  this->config.isWIFIenabled=false;
    
   this->Measurments_EN=false;
   this->Measurments_NEW=false;
@@ -112,14 +110,8 @@ void INTERFACE_CLASS::settings_defaults(){
   this->config.language ="en";
 
   this->LIGHT_SLEEP_EN=false;
-  this->BLE_IS_DEVICE_CONNECTED=false;
-  this->config.DEVICE_BLE_NAME="Slab 12A";
-  this->forceFirmwareUpdate=false;
   
-
-  this->clear_wifi_networks();
-  
-   this->mserial->printStrln("settings defaults loaded.");
+  this->mserial->printStrln("settings defaults loaded.");
 }
 // ****************************************************
 
@@ -147,77 +139,6 @@ void INTERFACE_CLASS::settings_defaults(){
       }
     }
 
-
-// ****************************************************
-
-void INTERFACE_CLASS::setBLEconnectivityStatus(bool status){
-  this->mserial->printStrln("BLE status is " +String(status));
-
-  this->BLE_IS_DEVICE_CONNECTED = status;
-  this->mserial->BLE_IS_DEVICE_CONNECTED = status;
-  if (status == false)
-    this->$espunixtimeDeviceDisconnected = millis();
-}
-// ........................................
-bool INTERFACE_CLASS::getBLEconnectivityStatus(){
-  return this->BLE_IS_DEVICE_CONNECTED;
-}
-
-// ****************************************************
-void INTERFACE_CLASS::clear_wifi_networks(){
-  for(int i=0; i<5 ; i++){
-    this->config.ssid[i] = "";
-    this->config.password[i] = "";
-  }
-  this->number_WIFI_networks=0;
-  this->saveSettings();
-}
-
-// ****************************************************
-bool INTERFACE_CLASS::add_wifi_network(String  ssid, String password){
-  for(int i=0; i<5 ; i++){
-    if (this->config.ssid[i] == ssid){
-      this->mserial->printStrln("WIFI network already on the list");
-      return false;
-    }
-  }
-
-  this->config.ssid[this->number_WIFI_networks]=ssid;
-  this->config.password[ this->number_WIFI_networks]= password;
-  this->number_WIFI_networks++;
-
-  if( this->number_WIFI_networks>4)
-    this->number_WIFI_networks=0;
-    
-  this->saveSettings();
-  return true;
-}
-
-// ***************************************************
-int INTERFACE_CLASS::getNumberWIFIconfigured(){  
-  return  this->number_WIFI_networks;
-}
-
-void INTERFACE_CLASS::setNumberWIFIconfigured(uint8_t num){  
-  this->number_WIFI_networks= num;
-}
-// ****************************************************
-
-void INTERFACE_CLASS::init_NTP_Time(char* ntpServer_, long gmtOffset_sec_, int daylightOffset_sec_, long NTP_request_interval_){
-  this->config.ntpServer = String(ntpServer_);
-  this->config.gmtOffset_sec = gmtOffset_sec_; // 3600 for 1h difference
-  this->config.daylightOffset_sec = daylightOffset_sec_;
-  this->config.NTP_request_interval=NTP_request_interval_;// 64 sec.
-  this->NTP_last_request=0;
-  this->rtc =  ESP32Time(this->config.gmtOffset_sec);
-  configTime(this->config.gmtOffset_sec, this->config.daylightOffset_sec, this->config.ntpServer.c_str());
-
-  this->mserial->printStrln("set RTC clock to firmware Date & Time ...");  
-  rtc.setTimeStruct(CompileDateTime(__DATE__, __TIME__)); 
-
-  this->mserial->printStrln(rtc.getDateTime(true));
-
-}
 
 // ***************************************************************************
 void INTERFACE_CLASS::sendBLEstring(String message,  uint8_t sendTo ){  
@@ -254,28 +175,12 @@ bool INTERFACE_CLASS::saveSettings(fs::FS &fs){
     return false;
   }
 
-  settingsFile.print( this->config.firmwareUpdate + String(';'));
+  settingsFile.print( String(this->config.gmtOffset_sec) + String(';'));
+  settingsFile.print( String(this->config.daylightOffset_sec) + String(';'));
 
   settingsFile.print( String(this->config.isBatteryPowered) + String(';'));
 
   settingsFile.print( String(this->config.POWER_PLUG_ALWAYS_ON) + String(';'));
-
-  settingsFile.print( String(this->config.isWIFIenabled) + String(';') );
-
-  String ssid="";
-  String pwd="";
-  for(int i=0; i<5 ; i++){
-    settingsFile.print( this->config.ssid[i] + String(';'));
-    settingsFile.print( this->config.password[i] + String(';'));
-  }
-
-  settingsFile.print( this->config.ntpServer + String(';'));
-
-  settingsFile.print( String(this->config.gmtOffset_sec) + String(';'));
-
-  settingsFile.print( String(this->config.daylightOffset_sec) + String(';'));
-
-  settingsFile.print( String(this->config.NTP_request_interval) + String(';'));
 
   settingsFile.print( String(this->config.onboard_motion_sensor_en) + String(';'));
 
@@ -294,8 +199,6 @@ bool INTERFACE_CLASS::saveSettings(fs::FS &fs){
   settingsFile.print( this->config.SENSOR_DATA_FILENAME + String(';'));
 
   settingsFile.print( this->config.DEVICE_PASSWORD + String(';'));
-
-  settingsFile.print( this->config.DEVICE_BLE_NAME + String(';'));
 
   settingsFile.print( String(this->config.MOTION_SENSITIVITY ,3)+ String(';'));
 
@@ -326,46 +229,20 @@ bool INTERFACE_CLASS::loadSettings(fs::FS &fs){
  // Serial.println( settingsFile2.readString() );
  // Serial.println(" === END ===== ");
         
-    this->mserial->printStrln("done. Size: " + String( settingsFile.size()) );
-
-          // firmmware update  ***************************
-    this->config.firmwareUpdate = settingsFile.readStringUntil(';');
-      // ******************* Power management **************
-    String temp= settingsFile.readStringUntil(';');
-    this->config.isBatteryPowered = *(temp.c_str()) != '0';
-    temp= settingsFile.readStringUntil(';');
-    this->config.POWER_PLUG_ALWAYS_ON = *(temp.c_str()) != '0';
-      // ********************* WIFI *************************
-    temp= settingsFile.readStringUntil(';');
-    this->config.isWIFIenabled = *(temp.c_str()) != '0';
-
-    this->setNumberWIFIconfigured(0);
-    for(int i=0; i<5; i++){
-      temp = settingsFile.readStringUntil(';');
-      temp.trim();
-      this->config.ssid[i] = temp;
-
-      temp = settingsFile.readStringUntil(';');
-      temp.trim();
-      this->config.password[i] = temp;
-      
-      if (this->config.ssid[i].length()>0 && isStringAllSpaces(this->config.ssid[i])==false ){
-        this->setNumberWIFIconfigured(this->getNumberWIFIconfigured()+1);
-      }
-    }
-    this->mserial->printStrln( "number of wifi networks is " + String(this->getNumberWIFIconfigured()));
-
-    // RTC: NTP server ***********************
-    this->config. ntpServer= settingsFile.readStringUntil(';');
+this->mserial->printStrln("done. Size: " + String( settingsFile.size()) );
 
     this->config.gmtOffset_sec = atol(settingsFile.readStringUntil( ';' ).c_str() ); 
 
-    temp = settingsFile.readStringUntil(';');
+    String temp = settingsFile.readStringUntil(';');
     this->config.daylightOffset_sec = temp.toInt();
-    
-    this->config.NTP_request_interval = atol(settingsFile.readStringUntil( ';' ).c_str() ); 
 
-      // ********************** onboard sensors *********************
+// ******************* Power management **************
+    temp= settingsFile.readStringUntil(';');
+    this->config.isBatteryPowered = *(temp.c_str()) != '0';
+    temp= settingsFile.readStringUntil(';');
+    this->config.POWER_PLUG_ALWAYS_ON = *(temp.c_str()) != '0';
+
+// ********************** onboard sensors *********************
     temp= settingsFile.readStringUntil(';');
     this->config.onboard_motion_sensor_en = *(temp.c_str()) != '0';
 
@@ -391,7 +268,6 @@ bool INTERFACE_CLASS::loadSettings(fs::FS &fs){
     this->config.SENSOR_DATA_FILENAME = settingsFile.readStringUntil(';');
 
     this->config.DEVICE_PASSWORD = settingsFile.readStringUntil(';');
-    this->config.DEVICE_BLE_NAME = settingsFile.readStringUntil(';');
 
     this->config.MOTION_SENSITIVITY = settingsFile.readStringUntil(';').toDouble();
     

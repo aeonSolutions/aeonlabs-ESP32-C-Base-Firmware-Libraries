@@ -71,7 +71,7 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 
         config_strut config;
 
-        long int $espunixtimePrev;
+        long int LAST_DATASET_UPLOAD;
 
         StaticJsonDocument <2*2463+ 14*JSON_ARRAY_SIZE(1) + 122*JSON_OBJECT_SIZE(1) > datasetInfoJson;
         

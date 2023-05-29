@@ -62,6 +62,9 @@ class FILE_CLASS  {
     bool storage_test_read_file( fs::FS &fs = LittleFS );
     void printDirectory(File dir, int numTabs);
 
+    bool writeFile(String filename, String contents, fs::FS &fs = LittleFS);
+    String readFile(String filename, fs::FS &fs = LittleFS);
+
 };
 
 #endif

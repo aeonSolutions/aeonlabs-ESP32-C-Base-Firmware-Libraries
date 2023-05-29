@@ -43,13 +43,11 @@ GBRL::GBRL() {
 
 }
 
-void GBRL::init(INTERFACE_CLASS* interface, MATURITY_CLASS* maturity, mSerial* mserial, M_WIFI_CLASS* mWifi){
-  this->mserial=mserial;
-  this->mserial->printStr("init GBRL ...");
+void GBRL::init(INTERFACE_CLASS* interface, M_WIFI_CLASS* mWifi){
   this->interface=interface;
-  this->maturity=maturity;
+  this->interface->mserial->printStr("init GBRL ...");
   this->mWifi= mWifi;
-  this->mserial->printStrln("done.");
+  this->interface->mserial->printStrln("done.");
 }
 
 // *********************************************************
@@ -137,12 +135,12 @@ bool GBRL::commands(String $BLE_CMD, uint8_t sendTo ){
   }else if($BLE_CMD=="$settings reset"){
       if (LittleFS.exists("/settings.cfg") ){
         if(LittleFS.remove("/settings.cfg") > 0 ){
-          this->mserial->printStrln("old settings file deleted");          
+          this->interface->mserial->printStrln("old settings file deleted");          
         }else{
           this->interface->sendBLEstring( "unable to delete settings\n",  sendTo );  
         }
       }else{
-        this->mserial->printStrln("settings file not found");
+        this->interface->mserial->printStrln("settings file not found");
       }
     this->interface->settings_defaults();
     this->interface->sendBLEstring( "Settings were reseted to default values.\n",  sendTo );  
@@ -154,13 +152,7 @@ bool GBRL::commands(String $BLE_CMD, uint8_t sendTo ){
 
   }else if($BLE_CMD.indexOf("$usb ")>-1){
       return this->powerManagement($BLE_CMD,  sendTo );            
-  }else if($BLE_CMD.indexOf("$firmware cfg ")>-1){
-      return this->firmware($BLE_CMD,  sendTo );
-  }else if($BLE_CMD=="$firmware update"){
-    this->interface->forceFirmwareUpdate=true;
-    dataStr = "Starting Firmware update... one moment.\n";
-    this->interface->sendBLEstring( dataStr,  sendTo );  
-    return true;
+
   }else if($BLE_CMD=="$dt"){
       dataStr=String(this->interface->rtc.getDateTime(true)) + String( char(10));
       this->interface->sendBLEstring( dataStr,  sendTo );  
@@ -327,15 +319,15 @@ bool GBRL::powerManagement(String $BLE_CMD, uint8_t sendTo ){
           this->interface->config.isBatteryPowered=false;
     }
   } else if($BLE_CMD=="$BAT" || $BLE_CMD=="$bat"){
-      this->mserial->printStr("Value from pin: ");
-      this->mserial->printStrln(String(analogRead(INTERFACE_CLASS::BATTERY_ADC_IO)));
-      this->mserial->printStr("Average value from pin: ");
-      this->mserial->printStrln(String(this->interface->BL.pinRead()));
-      this->mserial->printStr("Volts: ");
-      this->mserial->printStrln(String(this->interface->BL.getBatteryVolts()));
-      this->mserial->printStr("Charge level: ");
-      this->mserial->printStrln(String(this->interface->BL.getBatteryChargeLevel()));
-      this->mserial->printStrln("");
+      this->interface->mserial->printStr("Value from pin: ");
+      this->interface->mserial->printStrln(String(analogRead(INTERFACE_CLASS::BATTERY_ADC_IO)));
+      this->interface->mserial->printStr("Average value from pin: ");
+      this->interface->mserial->printStrln(String(this->interface->BL.pinRead()));
+      this->interface->mserial->printStr("Volts: ");
+      this->interface->mserial->printStrln(String(this->interface->BL.getBatteryVolts()));
+      this->interface->mserial->printStr("Charge level: ");
+      this->interface->mserial->printStrln(String(this->interface->BL.getBatteryChargeLevel()));
+      this->interface->mserial->printStrln("");
       
       dataStr="Battery at "+ String(this->interface->BL.getBatteryChargeLevel()) + "%" + String(char(10));
       this->interface->sendBLEstring( dataStr,  sendTo );
@@ -373,37 +365,7 @@ bool GBRL::powerManagement(String $BLE_CMD, uint8_t sendTo ){
 }
 
 
-// *************************************************************
-bool GBRL::firmware(String $BLE_CMD, uint8_t sendTo ){
-  String dataStr="";
 
-  if($BLE_CMD.indexOf("$firmware cfg ")>-1){
-    String value= $BLE_CMD.substring(17, $BLE_CMD.length());
-    if (value.indexOf("auto")>-1){
-      // firmwate update auto
-      this->interface->config.firmwareUpdate="auto";
-    } else if (value.indexOf("off")>-1){
-      // no firware updates
-      this->interface->config.firmwareUpdate="no";
-    } else if (value.indexOf("on")>-1){
-      // manual firmware updates
-      this->interface->config.firmwareUpdate="manual";
-    }else{
-      dataStr="UNK $ CMD \r\n";
-      this->interface->sendBLEstring( dataStr,  sendTo );
-      return true; 
-    }
-  }
-
-  if (this->interface->saveSettings()){
-    dataStr="$ CMD OK \n";
-    this->interface->sendBLEstring( dataStr,  sendTo );  
-  }else{
-    dataStr="Error saving settings \n";
-    this->interface->sendBLEstring( dataStr,  sendTo );  
-  }
-return true;
-}
 
 // ****************************************
  bool GBRL::set_device_language(String $BLE_CMD, uint8_t sendTo){
@@ -440,7 +402,7 @@ return true;
 
  // Request file from the base code repo
   String filename = country  +".lang";
-  this->mserial->printStrln("filename to request: "+filename); //, mSerial::DEBUG_TYPE_VERBOSE, mSerial::DEBUG_ALL_USB_UART_BLE);
+  this->interface->mserial->printStrln("filename to request: "+filename); //, mSerial::DEBUG_TYPE_VERBOSE, mSerial::DEBUG_ALL_USB_UART_BLE);
 
   if (LittleFS.exists( "/lang/" + country  +"_sys.lang" ) )
     LittleFS.remove( "/lang/" + country  +"_sys.lang" );

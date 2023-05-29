@@ -57,7 +57,7 @@ void DATAVERSE_CLASS::init(INTERFACE_CLASS* interface, M_WIFI_CLASS* mWifi, mSer
     this->config.UPLOAD_DATAVERSE_EN=true;
 
     this->DATASET_REPOSITORY_URL="";
-    this->$espunixtimePrev= millis();
+    this->LAST_DATASET_UPLOAD= millis();
   
   // ToDo: load Dataverse settings
     this->ErrMsgShown = false;
@@ -103,7 +103,7 @@ void DATAVERSE_CLASS::UploadToDataverse(bool ble_connected) {
   if (this->config.UPLOAD_DATAVERSE_EN==false || this->interface->Measurments_EN==false)
       return;
 
-  if ( ( millis() - this->$espunixtimePrev) < this->config.UPLOAD_DATASET_DELTA_TIME )
+  if ( ( millis() - this->LAST_DATASET_UPLOAD) < this->config.UPLOAD_DATASET_DELTA_TIME )
     return;
     
     
@@ -125,7 +125,7 @@ void DATAVERSE_CLASS::UploadToDataverse(bool ble_connected) {
   
   this->ErrMsgShown = false;
   this->mWifi->updateInternetTime();
-  this->$espunixtimePrev= millis();
+  this->LAST_DATASET_UPLOAD= millis();
 
   interface->onBoardLED->led[0] = interface->onBoardLED->LED_BLUE;
   interface->onBoardLED->statusLED(100, 0);

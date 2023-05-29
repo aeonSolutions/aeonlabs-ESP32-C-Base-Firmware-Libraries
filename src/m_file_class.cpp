@@ -184,3 +184,35 @@ void FILE_CLASS::printDirectory(File dir, int numTabs) {
     entry.close();
   }
 }
+// *********************************************
+String FILE_CLASS::readFile(String filename, fs::FS &fs){
+  
+  this->mserial->printStrln("reading file...");
+
+  File readFile = fs.open(filename, FILE_READ); 
+  if ( !readFile ){
+    this->mserial->printStrln("error opening  file " + filename);
+    readFile.close();
+    return "false";
+  }
+return readFile.readString();
+}
+// *************************************************************
+
+bool FILE_CLASS::writeFile(String filename, String contents, fs::FS &fs){
+  
+  this->mserial->printStrln("Saving file...");
+
+  if (fs.exists(filename) )
+    fs.remove(filename);
+
+  File saveFile = fs.open(filename, FILE_READ); 
+  if ( !saveFile ){
+    this->mserial->printStrln("error opening  file " + filename);
+    saveFile.close();
+    return false;
+  }
+
+  saveFile.print(contents);
+  return true;
+}

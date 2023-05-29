@@ -31,33 +31,58 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
  for Open Hardware & Source Development for more information.
 
 */
-#include "Arduino.h"
+
+
+#include "mserial.h"
 #include "interface_class.h"
-#include "m_wifi.h"
+#include <WebServer.h>
+#include "m_file_class.h"
+#include "onboard_sensors.h"
+#include "Config.h"
 
-#ifndef GBRL_COMMANDS  
-  #define GBRL_COMMANDS
-  
 
-  class GBRL {
-    private:
-      INTERFACE_CLASS* interface=nullptr;
-      M_WIFI_CLASS* mWifi=nullptr;
-      
-   // GBRL commands  *********************************************
-      bool firmware(String $BLE_CMD, uint8_t sendTo );
-      bool helpCommands( uint8_t sendTo );
-      bool runtime( uint8_t sendTo  );
-      bool powerManagement(String $BLE_CMD, uint8_t sendTo );
-      bool plug_status( uint8_t sendTo  );
-      bool debug_commands(String $BLE_CMD, uint8_t sendTo  );
-      bool set_device_language(String $BLE_CMD, uint8_t sendTo);
+#ifndef SMART_SWITCH_DEF
+  #define SMART_SWITCH_DEF
 
-    public:
-      GBRL();
-      void init(INTERFACE_CLASS* interface,  M_WIFI_CLASS* mWifi);
-      bool commands(String $BLE_CMD, uint8_t sendTo );
- 
+#define SAVED_OR_DEFAULT_ROOM_NAME(string) (strlen(string) == 0 ? DEFAULT_ROOM_NAME : string)
+
+class SMART_SWITCH_CLASS {
+  private:
+
+  public:
+    INTERFACE_CLASS* interface=nullptr;
+    FILE_CLASS* drive = nullptr;
+    WebServer*  server = nullptr;
+    ONBOARD_SENSORS* onBoardSensors = nullptr;
+
+    // PCB board specific charateristics
+    float ONBOARD_VOLTAGE = 3.3;
+    int ANALOG_RESOLUTION = 4095;
+
+    uint8_t POWER_CONSUMPTION_IO;
+    uint8_t RELAY_SWITCH_IO;
+    /*
+    ACS712 Voltage Output
+        1/2 VCC when no load or it is 2.5V since we use 5V as VCC.
+        5A type generate 185mV every amp current
+        20A type generate 100mV every amp current
+        30A type generate 66mV every amp current
+    */
+    float ACS_712_AMP;
+    float powerConsumption;
+
+    bool LampSwitchIs; 
+    char* weather;
+
+    SMART_SWITCH_CLASS();
+
+    void init(INTERFACE_CLASS* interface, FILE_CLASS* drive , WebServer* server, ONBOARD_SENSORS* onBoardSensors);
+    
+    void handleLamp();
+    const char* getLampStatus();
+    const char* getLampState();
+    void updatePowerConsumptionData();
+    void handleCommands();
 };
 
 #endif

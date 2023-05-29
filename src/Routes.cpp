@@ -4,9 +4,9 @@
 #include <Arduino.h>
 #include <ESP.h>
 #include <WiFi.h>
-#include "Files.h"
+
 #include "Config.h"
-#include "mserial.h"
+#include "m_file_class.h"
 
 Routes::Routes(WebServer* webServer) {
   server = webServer;
@@ -14,6 +14,14 @@ Routes::Routes(WebServer* webServer) {
 
 bool Routes::shouldRestart = false;
 
+void Routes::init(INTERFACE_CLASS* interface, FILE_CLASS* drive, M_WIFI_CLASS* mWifi ) {
+  this->drive = drive;
+  this->mWifi = mWifi;
+  this->interface = interface;
+
+}
+
+// *******************************************************
 void Routes::handleRoot() {
   //server->keepAlive(false);
   server->send(
@@ -35,7 +43,7 @@ void Routes::handleRoot() {
 }
 
 void Routes::handleWiFi() {
-  char* ssid = readFromFile("/ssid.txt");
+  String ssid = this->drive->readFile("/ssid.txt");
   String page;
   page += F(
             "<!doctype html><html>" HTML_HEAD "<body>"
@@ -61,7 +69,6 @@ void Routes::handleWiFi() {
   server->sendHeader(F("Expires"), F("0"));
   //server->keepAlive(false);
   server->send(200, MIME_HTML, page);
-  //free(ssid);
 }
 
 void Routes::handleWiFiScript() {
@@ -132,20 +139,18 @@ void Routes::handleWiFiSave() {
       "</body></html>"
     )
   );
-  writeToFile("ssid", ssid);
-  writeToFile("password", password);
-  Serial.println("Changed wifi config");
+  this->mWifi->add_wifi_network( ssid, password );
 }
 
 void Routes::handleRoomName() {
-  char* roomName = readFromFile("/room_name.txt");
+  String roomName = this->drive->readFile("/room_name.txt");
   String page;
   page += F(
             "<!doctype html><html>" HTML_HEAD "<body>"
             "<h1>Room Name</h1>"
             "<p>The current room name is &ldquo;"
           );
-  page += SAVED_OR_DEFAULT_ROOM_NAME(roomName);
+  page += SAVED_OR_DEFAULT_ROOM_NAME(roomName.c_str());
   page += F(
             "&rdquo;.</p>"
             "<h2>Change Room Name</h2>"
@@ -165,7 +170,6 @@ void Routes::handleRoomName() {
   server->sendHeader(F("Expires"), F("0"));
   //server->keepAlive(false);
   server->send(200, MIME_HTML, page);
-  //free(roomName);
 }
 
 void Routes::handleRoomNameSave() {
@@ -183,19 +187,19 @@ void Routes::handleRoomNameSave() {
       "</body></html>"
     )
   );
-  writeToFile("room_name", roomName);
-  Serial.println("Changed room name");
+  this->drive->writeFile("/room_name.txt", String(roomName) );
+  this->interface->mserial->printStrln("Changed room name");
 }
 
 void Routes::handleWeather() {
-  char* weatherDisplay = readFromFile("/weather.txt");
+  String weatherDisplay = this->drive->readFile("/weather.txt");
   String page;
   page += F(
             "<!doctype html><html>" HTML_HEAD "<body>"
             "<h1>Weather Display</h1>"
             "<p>Currently the weather display is "
           );
-  page += strcmp(weatherDisplay, "1") == 0 ? "enabled" : "disabled";
+  page += strcmp(weatherDisplay.c_str(), "1") == 0 ? "enabled" : "disabled";
   page += F(
             ". Please note that weather data is fetched from the Internet. "
             "Data that can be regarded personal will get transmitted to the weather provider.</p>"
@@ -203,7 +207,7 @@ void Routes::handleWeather() {
             "<form method='POST' action='weather-save'>"
             "<input type='hidden' name='bool' value='"
           );
-  page += strcmp(weatherDisplay, "1") == 0 ? "0" : "1";
+  page += strcmp(weatherDisplay.c_str(), "1") == 0 ? "0" : "1";
   page += F(
             "' />"
             "<input type='submit' value='Toggle' />"
@@ -216,7 +220,6 @@ void Routes::handleWeather() {
   server->sendHeader(F("Expires"), F("0"));
   //server->keepAlive(false);
   server->send(200, MIME_HTML, page);
-  //free(weatherDisplay);
 }
 
 void Routes::handleWeatherSave() {
@@ -234,13 +237,13 @@ void Routes::handleWeatherSave() {
       "</body></html>"
     )
   );
-  writeToFile("weather", weatherDisplay);
-  Serial.println("Changed weather display");
+   this->drive->writeFile("weather.txt", String(weatherDisplay) );
+  this->interface->mserial->printStrln("Changed weather display");
 }
 
 void Routes::handleRequestRestart() {
   //server->keepAlive(false);
-  server->send(200, F("text/javascript"), F("console.Serial.println('Restarting');"));
+  server->send(200, F("text/javascript"), F("console.log('Restarting');"));
   if (Routes::shouldRestart) {
     delay(2000);
     ESP.restart();
@@ -266,7 +269,7 @@ void Routes::handleStatus() {
             "</li>"
             "<li>Signal Strength: "
           );
-  page += RSSIToPercent(WiFi.RSSI());
+  page += this->mWifi->RSSIToPercent(WiFi.RSSI());
   page += F(
             " %</li>"
             "<li>RAM Usage: "
@@ -338,10 +341,4 @@ void Routes::handleNotFound() {
       "</body></html>"
     )
   );
-}
-
-uint8_t Routes::RSSIToPercent(long rssi) {
-  if (rssi >= -50) return 100;
-  else if (rssi <= -100) return 0;
-  else return (rssi + 100) * 2;
 }

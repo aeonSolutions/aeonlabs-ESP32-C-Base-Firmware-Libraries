@@ -33,31 +33,63 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 */
 #include "Arduino.h"
 #include "interface_class.h"
+#include <TFT_eSPI.h>                                            
 #include "m_wifi.h"
 
-#ifndef GBRL_COMMANDS  
-  #define GBRL_COMMANDS
-  
+#ifndef DISPLAY_LCD  
+  #define DISPLAY_LCD
 
-  class GBRL {
+  // LCD  ***************************************************** 
+    // ST7789 TFT module connections : every pcb needs to edit pins on the file UserSetup.h (see library)
+    /*
+    #define TFT_MOSI 8  // SDA Pin on ESP32
+    #define TFT_SCLK 9  // SCL Pin on ESP32
+    #define TFT_CS   37  // Chip select control pin
+    #define TFT_DC   36  // Data Command control pin
+    #define TFT_RST  38  // Reset pin (could connect to RST pin)
+    #define TFT_BUSY 1  // busy pin
+    */
+
+    #define TFT_PORTRAIT_FLIPED 4
+
+  class DISPLAY_LCD_CLASS {
     private:
-      INTERFACE_CLASS* interface=nullptr;
-      M_WIFI_CLASS* mWifi=nullptr;
+        INTERFACE_CLASS* interface=nullptr;
+        M_WIFI_CLASS* mWifi=nullptr;
       
-   // GBRL commands  *********************************************
-      bool firmware(String $BLE_CMD, uint8_t sendTo );
-      bool helpCommands( uint8_t sendTo );
-      bool runtime( uint8_t sendTo  );
-      bool powerManagement(String $BLE_CMD, uint8_t sendTo );
-      bool plug_status( uint8_t sendTo  );
-      bool debug_commands(String $BLE_CMD, uint8_t sendTo  );
-      bool set_device_language(String $BLE_CMD, uint8_t sendTo);
+        String oldText="";
+        String oldTFTtext="";
+        int oldPosX=0;
+        int oldPosY=0;
+        uint8_t oldTextsize=2;
 
     public:
-      GBRL();
+      bool TEST_LCD;
+
+      int8_t LCD_BACKLIT_LED;
+
+      // TFT screen resolution
+      static constexpr int LCD_TFT_WIDTH = 240;
+      static constexpr int LCD_TFT_HEIGHT = 280; 
+
+      // TFT orientation modes
+      static constexpr uint8_t LCD_TFT_LANDSCAPE = 2;
+      static constexpr uint8_t LCD_TFT_LANDSCAPE_FLIPED = 3;
+      static constexpr uint8_t LCD_TFT_PORTRAIT = 1;
+      static constexpr uint8_t LCD_TFT_PORTRAIT_FLIPED = 0;
+
+      int TFT_CURRENT_X_RES;
+      int TFT_CURRENT_Y_RES;
+      
+      TFT_eSPI tft = TFT_eSPI();    
+
+      DISPLAY_LCD_CLASS();
       void init(INTERFACE_CLASS* interface,  M_WIFI_CLASS* mWifi);
-      bool commands(String $BLE_CMD, uint8_t sendTo );
- 
+
+      void testfastlines(uint16_t color1, uint16_t color2);
+      void loadStatus(String text);
+      void tftPrintText(int x, int y, char text[], uint8_t textSize =2 , char align[] = "custom", uint16_t color=TFT_WHITE, bool deletePrevText=false);
+      void TFT_setScreenRotation(uint8_t rotation);
 };
 
 #endif

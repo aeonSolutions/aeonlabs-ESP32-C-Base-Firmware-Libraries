@@ -82,10 +82,9 @@ void SETTINGS_CLASS::load(){
     */
 
     while (sqlite3_step(this->result) == SQLITE_ROW) {
-        this->interface->config.ntpServer= (char*) sqlite3_column_text(this->result, 1) ;
         this->interface->config.gmtOffset_sec= atol( (char *) sqlite3_column_text(this->result, 1) );
         this->interface->config.daylightOffset_sec= atol( (char *) sqlite3_column_text(this->result, 1) );
-        this->interface->config.NTP_request_interval= atol( (char *) sqlite3_column_text(this->result, 1) );
+
     }
 
 
