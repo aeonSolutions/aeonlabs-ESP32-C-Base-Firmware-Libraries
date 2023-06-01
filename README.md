@@ -29,7 +29,7 @@ Currently it uncludes:
 - Onboard sensors 
    - AHT2x Temperature & Humidty sensor
    - LSM6DS3 motion sensor
-- FFat File managment
+- FFat File managment (uses LittleFs )
 - WIFI connectivity managemnt
 - NPT Internet Time Syncronization
 - $GBRL command style communication
