@@ -24,7 +24,7 @@ This is still an early code develpment. Is memory intensive and lacks many code 
 
 Currently it uncludes:
 
-- TFT LCD Display Library
+- TFT LCD Display Library (uses TFT_eSPI)
 - Geolocation over WIFI 
 - Onboard sensors 
    - AHT2x Temperature & Humidty sensor
