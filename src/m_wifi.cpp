@@ -48,6 +48,7 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 M_WIFI_CLASS::M_WIFI_CLASS(){
   this->MemLockSemaphoreWIFI = xSemaphoreCreateMutex();
   this->WIFIconnected=false;
+  this->BLE_IS_DEVICE_CONNECTED=false;
 }
 
 
@@ -61,15 +62,20 @@ void M_WIFI_CLASS::init(INTERFACE_CLASS* interface, FILE_CLASS* drive, ONBOARD_L
     this->REQUEST_DELTA_TIME_GEOLOCATION  = 10*60*1000; // 10 min 
     this->$espunixtimePrev= millis(); 
     
+    this->number_WIFI_networks=0;
+    this-> prevTimeErrMsg= millis() + 120000;
+
     this->HTTP_TTL= 20000; // 20 sec TTL
     this->lastTimeWifiConnectAttempt=millis();
     this->wifiMulti= new WiFiMulti();
     this->prevTimeErrMsg = millis() - 60000;
+    
     WiFi.onEvent(WIFIevent);
     WiFi.onEvent(WiFiGotIP, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
 
     configTime(this->interface->config.gmtOffset_sec, this->interface->config.daylightOffset_sec, this->config.ntpServer.c_str());
-
+    
+    this->BLE_IS_DEVICE_CONNECTED=false;
     this->interface->mserial->printStrln("done");
 }
 // **************************************************
@@ -90,46 +96,46 @@ void M_WIFI_CLASS::settings_defaults(){
 // ************************************************
 
 bool M_WIFI_CLASS::start(uint32_t  connectionTimeout, uint8_t numberAttempts){
-
-    if (WiFi.status() == WL_CONNECTED)
-      return true;
-
-    this->connectionTimeout=connectionTimeout;
-    
-    if (this->getNumberWIFIconfigured() == 0 ){
-      this->lastTimeWifiConnectAttempt=millis();
-      if ( this->checkErrorMessageTimeLimit() ){
-        this->interface->mserial->printStrln("WIFI: You need to add a wifi network first", this->interface->mserial->DEBUG_TYPE_ERRORS);
-      }
-      
-      this->startAP();
-      return false;
-    }
-
-    if ( this->interface->CURRENT_CLOCK_FREQUENCY < this->interface->WIFI_FREQUENCY )
-      this->resumeWifiMode();
-
-    for(uint8_t i=0; i < 5; i++){
-      if (this->config.ssid[i] !="")
-        this->wifiMulti->addAP(this->config.ssid[i].c_str(), this->config.password[i].c_str());        
-    }
-
-    WiFi.mode(WIFI_AP_STA);
-    
-    char* roomName = (char*) this->drive->readFile("/room_name.txt").c_str();
-    char* customHostname = (char*) malloc(sizeof(char) * 64);
-    sprintf_P(customHostname, PSTR("AeonHome-%s"), SAVED_OR_DEFAULT_ROOM_NAME(roomName));
-    WiFi.mode(WIFI_STA);
-    WiFi.hostname(customHostname);
-
-    this->connect2WIFInetowrk(numberAttempts);
-    this->lastTimeWifiConnectAttempt=millis();
+  if (WiFi.status() == WL_CONNECTED)
     return true;
+
+  this->connectionTimeout=connectionTimeout;
+  
+  if (this->getNumberWIFIconfigured() == 0 ){
+    this->lastTimeWifiConnectAttempt=millis();
+    if ( this->checkErrorMessageTimeLimit() ){
+      this->interface->mserial->printStrln("WIFI: You need to add a wifi network first", this->interface->mserial->DEBUG_TYPE_ERRORS);
+      this->interface->onBoardLED->led[0] = this->interface->onBoardLED->LED_RED;
+      this->interface->onBoardLED->statusLED(100, 1);
+    }
+    
+    // this->startAP(); web server
+    return false;
+  }
+
+  if ( this->interface->CURRENT_CLOCK_FREQUENCY < this->interface->WIFI_FREQUENCY )
+    this->resumeWifiMode();
+
+  for(uint8_t i=0; i < 5; i++){
+    if (this->config.ssid[i] !="")
+      this->wifiMulti->addAP(this->config.ssid[i].c_str(), this->config.password[i].c_str());        
+  }
+
+  interface->onBoardLED->led[0] = interface->onBoardLED->LED_BLUE;
+  interface->onBoardLED->statusLED(100, 1);
+
+  WiFi.mode(WIFI_STA);
+  
+  this->connect2WIFInetowrk(numberAttempts);
+  this->lastTimeWifiConnectAttempt=millis();
+  return true;
 }
+
+
 // ********************************************
 
 bool M_WIFI_CLASS::checkErrorMessageTimeLimit(){
-  if( millis() - this-> prevTimeErrMsg > 60000 ){
+  if( abs( long(millis() - this-> prevTimeErrMsg) ) > 60000 ){
     this-> prevTimeErrMsg = millis();
     return false;
   }
@@ -251,12 +257,15 @@ void M_WIFI_CLASS::setNumberWIFIconfigured(uint8_t num){
 
 // ********************************************************
  void M_WIFI_CLASS::resumeWifiMode(){
-      this->interface->mserial->printStrln("WIFI: setting MCU clock to EN WIFI");
+    xSemaphoreTake(this->interface->McuFreqSemaphore, portMAX_DELAY);
+      this->interface->McuFrequencyBusy = true;
+
       changeMcuFreq(interface, interface->WIFI_FREQUENCY);
       interface->CURRENT_CLOCK_FREQUENCY = interface->WIFI_FREQUENCY;
 
-      interface->onBoardLED->led[0] = interface->onBoardLED->LED_BLUE;
-      interface->onBoardLED->statusLED(100, 1);
+      this->interface->mserial->printStrln("setting to WIFI EN CPU Freq = " + String(getCpuFrequencyMhz()));
+      this->interface->McuFrequencyBusy = false;
+  xSemaphoreGive(this->interface->McuFreqSemaphore);
  }
 // ********************************************************
 
@@ -281,11 +290,16 @@ String M_WIFI_CLASS::get_wifi_status(int status){
 
 // *********************************************************
 void M_WIFI_CLASS::WIFIscanNetworks(bool override){
+
   if ( WiFi.status() == WL_CONNECTED && override == false )
     return;
-    
-  String dataStr = "";
+  
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
   int n = WiFi.scanNetworks();
+  
+  String dataStr = "";
+
   if (n == 0) {
     this->interface->sendBLEstring( "no nearby WIFI networks found\n", mSerial::DEBUG_ALL_USB_UART_BLE);
   } else {
@@ -792,7 +806,7 @@ void M_WIFI_CLASS::startFirmwareUpdate(){
   }
 
   
-  if ( this->interface->getBLEconnectivityStatus()){
+  if ( this->getBLEconnectivityStatus()){
     delay(500);
     this->interface->sendBLEstring("done. \nRequesting the lastest firmware revision....");
     delay(500);
@@ -819,7 +833,7 @@ void M_WIFI_CLASS::startFirmwareUpdate(){
     this->interface->onBoardLED->led[0] = this->interface->onBoardLED->LED_BLUE;
     this->interface->onBoardLED->statusLED(100,0); 
     this->interface->mserial->printStrln("new firmware version found. Starting update ...");
-    if ( interface->getBLEconnectivityStatus()){
+    if ( this->getBLEconnectivityStatus()){
       delay(500);
       this->interface->sendBLEstring("done. \nNew firmware version found. Starting to download and upodate. The Device will reboot when completed. ");
       delay(500);
@@ -830,7 +844,7 @@ void M_WIFI_CLASS::startFirmwareUpdate(){
     return;
   }else{
     this->interface->mserial->printStrln("no firmware update needed.");
-    if ( this->interface->getBLEconnectivityStatus()){
+    if ( this->getBLEconnectivityStatus()){
       delay(500);
       this->interface->sendBLEstring("done. \nNo new firmware available");
       delay(500);
