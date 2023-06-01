@@ -24,12 +24,12 @@ This is still an early code develpment. Is memory intensive and lacks many code 
 
 Currently it uncludes:
 
-- TFT LCD Display Library (uses TFT_eSPI)
+- TFT LCD Display Library (uses [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI))
 - Geolocation over WIFI 
 - Onboard sensors 
    - AHT2x Temperature & Humidty sensor
    - LSM6DS3 motion sensor
-- FFat File managment (uses LittleFs )
+- FFat File managment (uses [LittleFs](https://github.com/littlefs-project/littlefs) )
 - WIFI connectivity managemnt
 - NPT Internet Time Syncronization
 - $GBRL command style communication
