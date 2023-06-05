@@ -85,6 +85,12 @@ These Smart DAQ devices are of type "Internet of Everything" (IoE) Smart Devices
   <img height="200" src="https://github.com/aeonSolutions/openScienceResearch-Smart-DAQ-Device-able-to-Upload-Live-Experimental-Sensor-Data-to-a-Data-Repo/blob/main/Design/12bitSmartDAQ2023january_2.jpeg">
 </p>
 
+<br>
+
+### Useful utilities
+
+[Arduino ESP8266/ESP32 Exception Stack Trace Decoder](https://github.com/me-no-dev/EspExceptionDecoder)
+
 <br />
 <br />
 
