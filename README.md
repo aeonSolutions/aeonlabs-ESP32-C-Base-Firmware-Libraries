@@ -28,9 +28,9 @@ Currently it uncludes:
 - Geolocation over WIFI 
 - External sensor measurements (channel 1 & 2)
    - DS18B20 Temperature sensor
-   - AHT2x Temperature & Humidty sensor
-   - SHT3x Temperature & Humidty sensor
-   - built in Ohmmeter   
+   - AHT2x Temperature & Humidity sensor
+   - SHT3x Temperature & Humidity sensor
+   - Built in Ohmmeter
 - Onboard sensors 
    - AHT2x/ SHT3x Temperature & Humidty sensor
    - LSM6DS3 motion sensor
