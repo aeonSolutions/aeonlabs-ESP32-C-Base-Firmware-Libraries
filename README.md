@@ -26,8 +26,12 @@ Currently it uncludes:
 
 - TFT LCD Display Library (uses [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI))
 - Geolocation over WIFI 
-- Onboard sensors 
+- external sensor measurements (channel 1 & 2)
+   - DS18B20 Temperature sensor
    - AHT2x Temperature & Humidty sensor
+   - SHT3x Temperature & Humidty sensor  
+- Onboard sensors 
+   - AHT2x/ SHT3x Temperature & Humidty sensor
    - LSM6DS3 motion sensor
 - FFat File managment (uses [LittleFs](https://github.com/littlefs-project/littlefs) )
 - WIFI connectivity managemnt
