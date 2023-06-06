@@ -26,7 +26,7 @@ Currently it uncludes:
 
 - TFT LCD Display Library (uses [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI))
 - Geolocation over WIFI 
-- external sensor measurements (channel 1 & 2)
+- External sensor measurements (channel 1 & 2)
    - DS18B20 Temperature sensor
    - AHT2x Temperature & Humidty sensor
    - SHT3x Temperature & Humidty sensor
