@@ -112,11 +112,9 @@ void INTERFACE_CLASS::settings_defaults(){
   this->mserial->printStrln("settings defaults loaded.");
 }
 // ****************************************************
-  bool setMCUclockFrequency(int clockFreq){
+  bool INTERFACE_CLASS::setMCUclockFrequency(int clockFreq){
     xSemaphoreTake(this->McuFreqSemaphore, portMAX_DELAY);
       this->McuFrequencyBusy = true;
-      changeMcuFreq(this-, this->interface->MIN_MCU_FREQUENCY);
-
         this->UARTserial->flush();
         
         setCpuFrequencyMhz(Freq);
@@ -135,7 +133,7 @@ void INTERFACE_CLASS::settings_defaults(){
 
       this->mserial->printStrln("Setting to min CPU Freq = " + String(getCpuFrequencyMhz()));
       this->McuFrequencyBusy = false;
-    xSemaphoreGive(this->interface->McuFreqSemaphore);
+    xSemaphoreGive(this->McuFreqSemaphore);
     return true;
   };
 

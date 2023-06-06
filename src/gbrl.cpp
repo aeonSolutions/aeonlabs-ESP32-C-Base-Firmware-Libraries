@@ -82,7 +82,6 @@ void GBRL::init(INTERFACE_CLASS* interface, M_WIFI_CLASS* mWifi){
 
 bool GBRL::commands(String $BLE_CMD, uint8_t sendTo ){
   String dataStr="";
-
   if($BLE_CMD.indexOf("$lang dw ")>-1){
     return this->set_device_language($BLE_CMD, sendTo);
   }

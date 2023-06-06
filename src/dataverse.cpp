@@ -34,15 +34,15 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 
 #include "dataverse.h"
 #include <Arduino.h>
-#include "manage_mcu_freq.h"
+
 
 DATAVERSE_CLASS::DATAVERSE_CLASS(){
 
 }
 
 void DATAVERSE_CLASS::init(INTERFACE_CLASS* interface, M_WIFI_CLASS* mWifi, MEASUREMENTS* measurements){
-    this->interface->mserial->printStr("init dataverse ...");
     this->interface=interface;
+    this->interface->mserial->printStr("init dataverse ...");
     this->mWifi= mWifi;
     this->measurements = measurements;
 
@@ -98,24 +98,30 @@ bool DATAVERSE_CLASS::readSettings(fs::FS &fs){
 void DATAVERSE_CLASS::syncronizeToDataverse(){
   if ( (this->config.UPLOAD_DATASET_DELTA_TIME < ( millis() -  this->LAST_DATASET_UPLOAD )) ) {
     this->LAST_DATASET_UPLOAD = millis();
+        this->interface->mserial->printStrln(" status time 1");
+
   }else{
     return;
   }
+    this->interface->mserial->printStrln(" status time 2");
 
   if (false == mWifi->start(10000, 5) ){ // TTL , n attempts
     return;
   }
+    this->interface->mserial->printStrln(" status time 3");
   
   if ( WiFi.status() != WL_CONNECTED )
     return;
+    this->interface->mserial->printStrln(" status time 4");
 
   this->interface->mserial->printStrln("");
   this->interface->mserial->printStrln("Upload Data to the Dataverse...");
 
   while (measurements->datasetFileIsBusySaveData) {
-    this->this->interface->mserial->printStr("busy Saving data... ");
+    this->interface->mserial->printStr("busy Saving data... ");
     delay(500);
   }
+    this->interface->mserial->printStrln(" status time 5");
   
   this->interface->onBoardLED->led[0] = this->interface->onBoardLED->LED_BLUE;
   this->interface->onBoardLED->statusLED(100, 0);
@@ -124,14 +130,14 @@ void DATAVERSE_CLASS::syncronizeToDataverse(){
   xSemaphoreGive(measurements->MemLockSemaphoreDatasetFileAccess);
 
   this->interface->mserial->printStrln(" get dataset metadata...");
-  dataverse->getDatasetMetadata();
+  this->getDatasetMetadata();
 
   this->interface->onBoardLED->led[0] = this->interface->onBoardLED->LED_GREEN;
   this->interface->onBoardLED->statusLED(100, 2);
   this->interface->onBoardLED->led[0] = this->interface->onBoardLED->LED_BLUE;
   this->interface->onBoardLED->statusLED(100, 0);
 
-  dataverse->UploadToDataverse(0);
+  this->UploadToDataverse(0);
 
   this->interface->onBoardLED->led[0] = this->interface->onBoardLED->LED_GREEN;
   this->interface->onBoardLED->statusLED(100, 2);
@@ -139,10 +145,6 @@ void DATAVERSE_CLASS::syncronizeToDataverse(){
   xSemaphoreTake(measurements->MemLockSemaphoreDatasetFileAccess, portMAX_DELAY);
     measurements->datasetFileIsBusyUploadData = false;
   xSemaphoreGive(measurements->MemLockSemaphoreDatasetFileAccess);
-
-  xSemaphoreTake(this->interface->MemLockSemaphoreCore2, portMAX_DELAY);
-    waitTimeWIFI = 0;
-  xSemaphoreGive(this->interface->MemLockSemaphoreCore2);
 
 };
 

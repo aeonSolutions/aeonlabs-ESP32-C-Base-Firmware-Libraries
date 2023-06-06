@@ -105,7 +105,7 @@ void mSerial::printStr(String str, uint8_t debugType, uint8_t DEBUG_TO ) {
           xSemaphoreTake(MemLockSemaphoreSerial, portMAX_DELAY); // enter critical section
             this->UARTserial->print(mem);
             this->UARTserial->print(str);
-            this->UARTserial->flush();
+            //this->UARTserial->flush();
           xSemaphoreGive(MemLockSemaphoreSerial); // exit critical section    
         }
       }
@@ -115,7 +115,7 @@ void mSerial::printStr(String str, uint8_t debugType, uint8_t DEBUG_TO ) {
           xSemaphoreTake(MemLockSemaphoreUSBSerial, portMAX_DELAY); // enter critical section
             Serial.print(mem);
             Serial.print(str);
-            Serial.flush();
+            //Serial.flush();
           xSemaphoreGive(MemLockSemaphoreUSBSerial); // exit critical section    
         }
       }
@@ -133,7 +133,10 @@ bool mSerial::readSerialData(){
   if( Serial.available() ){ // if new data is coming from the HW Serial
     while(Serial.available()){
       char inChar = Serial.read();
-      this->serialDataReceived += String(inChar);
+      if (  (10 != (int)inChar) && (13 != (int)inChar) )
+      {
+        this->serialDataReceived += String(inChar);
+      }
     }
     this->printStr(">");
     return true;
@@ -151,7 +154,10 @@ bool mSerial::readUARTserialData(){
   if( this->UARTserial->available() ){ // if new data is coming from the HW Serial
     while( this->UARTserial->available() ){
       char inChar = UARTserial->read();
-      this->serialUartDataReceived += String(inChar);
+      if (  (10 != (int)inChar) && (13 != (int)inChar) )
+      {
+        this->serialUartDataReceived += String(inChar);
+      }
     }
     this->printStr(">");
     return true;

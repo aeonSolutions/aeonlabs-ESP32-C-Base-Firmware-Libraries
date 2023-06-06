@@ -35,7 +35,6 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 #include "m_wifi.h"
 #include "time.h"
 #include "ESP32Time.h"
-#include "manage_mcu_freq.h"
 #include "HTTPClient.h"
 #include "Config.h"
 #include "m_file_functions.h"
@@ -250,7 +249,7 @@ void M_WIFI_CLASS::setNumberWIFIconfigured(uint8_t num){
     delay(100);
     WiFi.mode(WIFI_MODE_NULL);
 
-    changeMcuFreq(interface, interface->MIN_MCU_FREQUENCY);
+    this->interface->setMCUclockFrequency( interface->MIN_MCU_FREQUENCY);
     interface->CURRENT_CLOCK_FREQUENCY = interface->MIN_MCU_FREQUENCY;
     this->$espunixtimeDeviceDisconnected = millis();
  }
@@ -260,7 +259,7 @@ void M_WIFI_CLASS::setNumberWIFIconfigured(uint8_t num){
     xSemaphoreTake(this->interface->McuFreqSemaphore, portMAX_DELAY);
       this->interface->McuFrequencyBusy = true;
 
-      changeMcuFreq(interface, interface->WIFI_FREQUENCY);
+      this->interface->setMCUclockFrequency( interface->WIFI_FREQUENCY);
       interface->CURRENT_CLOCK_FREQUENCY = interface->WIFI_FREQUENCY;
 
       this->interface->mserial->printStrln("setting to WIFI EN CPU Freq = " + String(getCpuFrequencyMhz()));
