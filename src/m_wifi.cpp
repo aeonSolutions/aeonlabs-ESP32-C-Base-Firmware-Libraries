@@ -39,6 +39,7 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 #include "Config.h"
 #include "m_file_functions.h"
 #include "github_cert.h"
+#include "esp_wifi.h"
 
 #ifndef ESP32PING_H
   #include <ESP32Ping.h>
@@ -87,7 +88,7 @@ void M_WIFI_CLASS::settings_defaults(){
   this->config.DEVICE_BLE_NAME="AeonHome 12A";
   this->forceFirmwareUpdate=false;
   
-  this->clear_wifi_networks();
+  this->clear_wifi_networks(false);
   
    this->interface->mserial->printStrln("wifi settings defaults loaded.");
 }
@@ -114,6 +115,10 @@ bool M_WIFI_CLASS::start(uint32_t  connectionTimeout, uint8_t numberAttempts){
 
   if ( this->interface->CURRENT_CLOCK_FREQUENCY < this->interface->WIFI_FREQUENCY )
     this->resumeWifiMode();
+  delay(500);
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_STA);
+  delay(500);
 
   for(uint8_t i=0; i < 5; i++){
     if (this->config.ssid[i] !="")
@@ -123,8 +128,6 @@ bool M_WIFI_CLASS::start(uint32_t  connectionTimeout, uint8_t numberAttempts){
   interface->onBoardLED->led[0] = interface->onBoardLED->LED_BLUE;
   interface->onBoardLED->statusLED(100, 1);
 
-  WiFi.mode(WIFI_STA);
-  
   this->connect2WIFInetowrk(numberAttempts);
   this->lastTimeWifiConnectAttempt=millis();
   return true;
@@ -164,7 +167,6 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
     return false;
   }
   
-  //WiFi.disconnect(true);
  
   int WiFi_prev_state=-10;
   int cnt = 0;        
@@ -192,7 +194,7 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
     }
     
     cnt++;
-    if (cnt == numberAttempts &&   this->checkErrorMessageTimeLimit() ){ //1 min
+    if (cnt == numberAttempts ){ 
         this->interface->mserial->printStr( "." );
         this->interface->mserial->printStrln("\nCould not connect to a WIFI network after " + String(numberAttempts) + " attempts\n");
         this->WIFIconnected=false;
@@ -204,17 +206,21 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
 }
 // ****************************************************
 
-void M_WIFI_CLASS::clear_wifi_networks(){
+void M_WIFI_CLASS::clear_wifi_networks(bool saveSettings){
   for(int i=0; i<5 ; i++){
     this->config.ssid[i] = "";
     this->config.password[i] = "";
   }
   this->number_WIFI_networks=0;
-  this->saveSettings();
+  if (saveSettings)
+    this->saveSettings();
 }
 // ****************************************************
 
 bool M_WIFI_CLASS::add_wifi_network(String  ssid, String password){
+  if (this->config.ssid[0] == NULL)
+    this->clear_wifi_networks();
+
   for(int i=0; i<5 ; i++){
     if (this->config.ssid[i] == ssid){
       this->interface->mserial->printStrln("WIFI network already on the list");
@@ -245,12 +251,17 @@ void M_WIFI_CLASS::setNumberWIFIconfigured(uint8_t num){
  
  void M_WIFI_CLASS::resumePowerSavingMode(){
     this->interface->mserial->printStrln("WIFI: setting power saving mode.");
-    WiFi.disconnect(true);
-    delay(100);
-    WiFi.mode(WIFI_MODE_NULL);
+    if (this->ALWAYS_ON_WIFI == false){
+      WiFi.disconnect(true);
+      delay(100);
+      WiFi.mode(WIFI_MODE_NULL);
+      this->interface->setMCUclockFrequency( interface->MIN_MCU_FREQUENCY);
+      interface->CURRENT_CLOCK_FREQUENCY = interface->MIN_MCU_FREQUENCY;
+    }else{
+      this->interface->setMCUclockFrequency( interface->WIFI_FREQUENCY);
+      interface->CURRENT_CLOCK_FREQUENCY = interface->WIFI_FREQUENCY;
+    }
 
-    this->interface->setMCUclockFrequency( interface->MIN_MCU_FREQUENCY);
-    interface->CURRENT_CLOCK_FREQUENCY = interface->MIN_MCU_FREQUENCY;
     this->$espunixtimeDeviceDisconnected = millis();
  }
 
@@ -762,39 +773,10 @@ uint8_t M_WIFI_CLASS::RSSIToPercent(long rssi) {
 // Over The Air Firmware Update ********************************************************
 // ************************************************************************************
 void M_WIFI_CLASS::startFirmwareUpdate(){
+    if (this->start(10000, 5) == false)
+      return; 
+
     this->forceFirmwareUpdate=false;
-
-    if( WiFi.status() != WL_CONNECTED ){
-      if (this->getNumberWIFIconfigured()>0){
-        if ( this->getBLEconnectivityStatus())
-            this->interface->sendBLEstring("connecting to a wifi network. one moment...");
-        
-        this->start(10000, 5); // TTL , n attempts 
-        delay(500);
-
-        if ( this->getBLEconnectivityStatus())
-            this->interface->sendBLEstring("done.\n");
-      
-      }else{
-        this->interface->mserial->printStrln("Firmware: No Wifi networks configured");
-        if ( this->getBLEconnectivityStatus())
-          this->interface->sendBLEstring("Firmware: No Wifi networks configured.\n");
-        
-        this->interface->onBoardLED->led[0] = this->interface->onBoardLED->LED_RED;
-        this->interface->onBoardLED->statusLED(100, 1);
-        return;   
-      }
-    }
-
-  if(WiFi.status() != WL_CONNECTED){
-    this->interface->mserial->printStrln("Firmware: Wifi not connected.");
-    if ( this->getBLEconnectivityStatus())
-      this->interface->sendBLEstring("Firmware: Wifi not connected.\n");
-    
-    this->interface->onBoardLED->led[0] = this->interface->onBoardLED->LED_RED;
-    this->interface->onBoardLED->statusLED(100, 1);
-    return;   
-  }
     
   if ( this->getBLEconnectivityStatus()){
     if ( this->geoLocationInfoJson.containsKey("country") && this->geoLocationInfoJson.containsKey("regionName") ){
@@ -839,7 +821,8 @@ void M_WIFI_CLASS::startFirmwareUpdate(){
     }
 
     this->esp32fota->execOTA();
-    WiFi.disconnect(true);
+    if (this->ALWAYS_ON_WIFI == false)
+      WiFi.disconnect(true);
     return;
   }else{
     this->interface->mserial->printStrln("no firmware update needed.");
@@ -853,7 +836,8 @@ void M_WIFI_CLASS::startFirmwareUpdate(){
   }
   delete this->esp32fota;
   this->esp32fota = nullptr;
-  WiFi.disconnect(true);
+  if (this->ALWAYS_ON_WIFI == false)
+    WiFi.disconnect(true);
 }
 
 
