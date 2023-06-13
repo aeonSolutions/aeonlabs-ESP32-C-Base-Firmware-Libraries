@@ -32,40 +32,40 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 
 */
 
-#include "../../interface_class.h"
-#include "../../mserial.h"
-
-#ifndef OneWire_h
-  #include "OneWire.h" 
+#ifndef INTERFACE_CLASS_DEF
+  #include "../../interface_class.h"
 #endif
 
-#include "DallasTemperature.h"
+#include <Wire.h>
+#include "Adafruit_VL6180X.h"
 
-#ifndef DS18B20_SENSOR_CLASS  
-  #define DS18B20_SENSOR_CLASS
+
+#ifndef VL6180X_SENSOR_CLASS  
+  #define VL6180X_SENSOR_CLASS
   
-  class DS18B20_SENSOR {
+
+  class VL6180X_SENSOR {
     private:
       INTERFACE_CLASS* interface=nullptr;
-      OneWire onewire; 
-      uint8_t EXT_IO_ANALOG_PIN;
 
    // GBRL commands  *********************************************
       bool helpCommands( uint8_t sendTo );
 
     public:
-      DallasTemperature sensors;
-      DeviceAddress insideThermometer;
+      //VL6180X sensor  **********************************
+      bool sensorAvailable;
+      uint8_t VL6180X_ADDRESS;
+      Adafruit_VL6180X* vl6180x;
 
       uint8_t numSensors;
-      bool sensorAvailable;
       float* measurement;
       String* measurement_label;
+      String errorMessage;
 
-      DS18B20_SENSOR();
-      void init(INTERFACE_CLASS* interface,  uint8_t EXT_IO_ANALOG_PIN);
+      VL6180X_SENSOR();
+      void init(INTERFACE_CLASS* interface);
       bool requestMeasurements();
-      void ProbeSensorStatus(uint8_t sendTo = mSerial::DEBUG_ALL_USB_UART_BLE);
+      void startVL6180X();
 
       bool commands(String $BLE_CMD, uint8_t sendTo );
  

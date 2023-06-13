@@ -32,74 +32,105 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 
 */
 
-#include "sht3x.h"
+#include "vl6180x.h"
 #include "Arduino.h"
 
-SHT3X_SENSOR::SHT3X_SENSOR() {
-  this->SHT3X_ADDRESS = 0x44;
+VL6180X_SENSOR::VL6180X_SENSOR() {
+  this->VL6180X_ADDRESS = 0x38;
   this->numSensors=2;
   this->measurement = new float[numSensors];
-  this->measurement_label = new String[2] {"Temperature", "Humidity"};
+  this->measurement_label = new String[2] {"lux", "distance"};
+  this->errorMessage = "";
 }
 
-void SHT3X_SENSOR::init(INTERFACE_CLASS* interface, uint8_t SHT3X_ADDRESS){
+void VL6180X_SENSOR::init(INTERFACE_CLASS* interface){
   this->interface=interface;
-  this->interface->mserial->printStrln("\ninit SHT3x sensor:");
-  this->SHT3X_ADDRESS = SHT3X_ADDRESS;
+  this->interface->mserial->printStr("\ninit VL6180X sensor ...");
 
-  this->sht3x= new SHT31();
-  this->startSHT3X();
+  this->vl6180x = new Adafruit_VL6180X();  
+  this->startVL6180X();
 
   this->interface->mserial->printStrln("done.");
 }
 
 // ********************************************************
-void SHT3X_SENSOR::startSHT3X() {
+void VL6180X_SENSOR::startVL6180X() {
+  
     Wire.begin();
 
-    bool result = this->sht3x->begin();  
+    bool result = this->vl6180x->begin();  
     if (result){
         this->sensorAvailable = true;
-        this->interface->mserial->printStrln(" status code: " + String(this->sht3x->readStatus()));
+        this->interface->mserial->printStr("found the VL6180X sensor");
     }else{
         this->sensorAvailable = false;
-        this->interface->mserial->printStrln("not found at specified address (0x"+String(this->SHT3X_ADDRESS, HEX)+")");
+        this->interface->mserial->printStrln("VL6180X sensor not found");
         this->interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
         this->interface->onBoardLED->statusLED(100,2); 
     }
 }
 
 // *************************************************
- bool SHT3X_SENSOR::requestMeasurements(){
+ bool VL6180X_SENSOR::requestMeasurements(){
     if (this->sensorAvailable == false) {
-      startSHT3X(); 
+      startVL6180X(); 
     }  
 
-    //this->sht3x.read();
-
-    float sht_temp = sht3x->getTemperature();
-    float sht_humidity = sht3x->getHumidity();
-
-    if (isnan(sht_temp)) { // check if 'is not a number'
-      this->interface->mserial->printStrln("Failed to read temperature");
-      this->measurement[0] = -500;
-    }else{
-      this->measurement[0] = sht_temp;
+    this->measurement[0] = this->vl6180x->readLux(VL6180X_ALS_GAIN_5);
+    this->interface->mserial->printStr("Lux: "); Serial.println(this->measurement[0]);
+    
+    this->measurement[1] = this->vl6180x->readRange(); // milimeters
+    
+    uint8_t status = this->vl6180x->readRangeStatus();
+    if (status == VL6180X_ERROR_NONE) {
+      this->interface->mserial->printStr("Range: "); Serial.println(this->measurement[1]);
+      return true;
     }
 
-    if (isnan(sht_humidity)) { // check if 'is not a number'
-      this->interface->mserial->printStrln("Failed to read humidity");
-      this->measurement[1] = -500;
-    }else{
-      this->measurement[1] = sht_humidity;
+    // Some error occurred, print it out!
+    if  ((status >= VL6180X_ERROR_SYSERR_1) && (status <= VL6180X_ERROR_SYSERR_5)) {
+      Serial.println("System error");
+      this->errorMessage = "system error";
     }
-
-    return true;
+    else if (status == VL6180X_ERROR_ECEFAIL) {
+      Serial.println("ECE failure");
+      this->errorMessage = "ECE failure";
+    }
+    else if (status == VL6180X_ERROR_NOCONVERGE) {
+      Serial.println("No convergence");
+      this->errorMessage = "No convergence";
+    }
+    else if (status == VL6180X_ERROR_RANGEIGNORE) {
+      Serial.println("Ignoring range");
+      this->errorMessage = "Ignoring range";
+    }
+    else if (status == VL6180X_ERROR_SNR) {
+      Serial.println("Signal/Noise error");
+      this->errorMessage = "Signal/noise error";
+    }
+    else if (status == VL6180X_ERROR_RAWUFLOW) {
+      Serial.println("Raw reading underflow");
+      this->errorMessage = "raw reading underflow";
+    }
+    else if (status == VL6180X_ERROR_RAWOFLOW) {
+      Serial.println("Raw reading overflow");
+      this->errorMessage = "raw reading overlfow";
+    }
+    else if (status == VL6180X_ERROR_RANGEUFLOW) {
+      Serial.println("Range reading underflow");
+      this->errorMessage = "rnge reding underflow";
+    }
+    else if (status == VL6180X_ERROR_RANGEOFLOW) {
+      Serial.println("Range reading overflow");
+      this->errorMessage = "range reading overflow";
+    }
+    return false;
  }
 
+
 // *********************************************************
- bool SHT3X_SENSOR::helpCommands(uint8_t sendTo ){
-    String dataStr="GBRL commands:\n" \
+ bool VL6180X_SENSOR::helpCommands(uint8_t sendTo ){
+    String dataStr="VL6180x commands:\n" \
                     "$help $?                           - View available GBRL commands\n" \
                     "$lang set [country code]           - Change the smart device language\n\n";
 
@@ -108,7 +139,7 @@ void SHT3X_SENSOR::startSHT3X() {
  }
 // ******************************************************************************************
 
-bool SHT3X_SENSOR::commands(String $BLE_CMD, uint8_t sendTo ){
+bool VL6180X_SENSOR::commands(String $BLE_CMD, uint8_t sendTo ){
   String dataStr="";
   if($BLE_CMD.indexOf("$lang dw ")>-1){
 
@@ -116,3 +147,7 @@ bool SHT3X_SENSOR::commands(String $BLE_CMD, uint8_t sendTo ){
 
   return false;
 }
+
+
+
+
