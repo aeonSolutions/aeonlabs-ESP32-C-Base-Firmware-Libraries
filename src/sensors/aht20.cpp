@@ -48,8 +48,6 @@ void AHT20_SENSOR::init(INTERFACE_CLASS* interface, uint8_t AHT20_ADDRESS){
   this->AHT20_ADDRESS = AHT20_ADDRESS;
 
   this->aht20= new AHT20(this->AHT20_ADDRESS);
-  this->startAHT();
-
   this->interface->mserial->printStrln("done.");
 }
 

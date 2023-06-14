@@ -122,31 +122,42 @@ void TELEGRAM_CLASS::handleNewMessages(int numNewMessages) {
     
     if (text == "/cappuccino") {
       this->bot->sendMessage(chat_id, "You just sent a cup of cappuccino request to Miguel's " + this->coffeeMachine->coffeeMachineBrand + " Coffee Machine", "");
+      this->makeCup(chat_id, "cappuccino");
     }
     
     if (text == "/decaf") {
       this->bot->sendMessage(chat_id, "You just sent a cup of decaf. coffee request to Miguel's " + this->coffeeMachine->coffeeMachineBrand + " Coffee Machine", "");
+      this->makeCup(chat_id, "decaffeinated coffee");
     }
     
     if (text == "/coffee") {
       this->bot->sendMessage(chat_id, "You just sent a cup of coffee request to Miguel's " + this->coffeeMachine->coffeeMachineBrand + " Coffee Machine", "");
-      
-      if( false == this->coffeeMachine->startCoffeeMachine() ) {
-        this->bot->sendMessage(chat_id, this->coffeeMachine->errMessage, "");        
-      }else{
-        this->bot->sendMessage(chat_id, "Miguel accepted your offer. \n Making a cup of Coffee...one moment", "");
-        if (false == this->coffeeMachine->MakeNewCoffee() ){
-          this->bot->sendMessage(chat_id, this->coffeeMachine->errMessage, "");
-        }
-      }
+      this->makeCup(chat_id, "coffee");
     }
     
     if (text == "/tea") {
       this->bot->sendMessage(chat_id, "You just sent a cup of tea request to Miguel's " + this->coffeeMachine->coffeeMachineBrand + " Coffee Machine", "");
+      this->makeCup(chat_id, "tea");
     }
     
     if (text == "/state") {
         this->bot->sendMessage(chat_id, "I'm an old " + this->coffeeMachine->coffeeMachineBrand + " Coffee Machine. ", "");
     }
+  }
+}
+
+/// ******************************
+bool TELEGRAM_CLASS::makeCup(String chat_id, String what){
+  if( false == this->coffeeMachine->startCoffeeMachine() ) {
+    this->bot->sendMessage(chat_id, this->coffeeMachine->errMessage, "");  
+    return false;      
+  }else{
+    this->bot->sendMessage(chat_id, "Miguel accepted your offer. \n Making a cup of " + what + "...one moment", "");
+    if (false == this->coffeeMachine->startCupFill(what) ){
+      this->bot->sendMessage(chat_id, this->coffeeMachine->errMessage, "");
+      return false;
+    }
+    this->bot->sendMessage(chat_id," done. Thank you for your thoughtful offer.", "");
+    return true;
   }
 }

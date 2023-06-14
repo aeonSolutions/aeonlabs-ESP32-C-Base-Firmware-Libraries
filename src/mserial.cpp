@@ -226,3 +226,11 @@ void mSerial::sendBLEstring(String message,  uint8_t sendTo){
 delay(20);
 
 }
+
+/// *************************************
+String mSerial::padString(String str, int size){
+  for(int i= (size-str.length()) ; i<=size; i++ ){
+    str += " ";
+  }
+return str;
+}

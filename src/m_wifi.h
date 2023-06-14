@@ -124,6 +124,7 @@ class M_WIFI_CLASS {
     String requestGeoLocationDateTime;
     StaticJsonDocument <512> geoLocationInfoJson;
 
+    const char* months[12] {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 M_WIFI_CLASS();
 

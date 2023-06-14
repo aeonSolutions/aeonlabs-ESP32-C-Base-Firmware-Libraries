@@ -180,8 +180,6 @@ class INTERFACE_CLASS {
 
     void sendBLEstring(String message="",  uint8_t sendTo = mSerial::DEBUG_ALL_USB_UART_BLE );
 
-    void init_NTP_Time(char* ntpServer_="pool.ntp.org", long gmtOffset_sec_=0, int daylightOffset_sec=3600, long NTP_request_interval_=64000);
-
     bool setMCUclockFrequency(int clockFreq);
 
     bool loadDeviceLanguagePack(String country, uint8_t sendTo );

@@ -101,5 +101,7 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
       bool readSerialData();
       bool readUARTserialData();
 
+      String padString(String str, int size);
+
   };
 #endif

@@ -44,7 +44,7 @@ ONBOARD_SENSORS::ONBOARD_SENSORS(){
 
 void ONBOARD_SENSORS::init(INTERFACE_CLASS* interface, mSerial* mserial){
     this->mserial=mserial;
-    this->mserial->printStrln("\nInit onboard sensors...");
+    this->mserial->printStrln("\n==============   Init onboard sensors   =======================");
     
     this->interface=interface;
     this->i2c_err_t[0]="I2C_ERROR_OK";
@@ -73,7 +73,7 @@ void ONBOARD_SENSORS::init(INTERFACE_CLASS* interface, mSerial* mserial){
     this->numtimesMotionDetected=0;
 
     time(&this->$espunixtimePrev);
-    this->mserial->printStrln("done.");
+    this->mserial->printStrln("==================  done   ==================================");
 }
 
 // ***************************************************************
@@ -94,12 +94,11 @@ void ONBOARD_SENSORS::startLSM6DS3(){
     interface->onBoardLED->statusLED(100,2); 
     this->MotionSensorAvail=false;
   } else {
-    this->mserial->printStr("Starting Motion Sensor...");
+    this->interface->mserial->printStrln("\ninit motion sensor...done");
     interface->onBoardLED->led[0] = interface->onBoardLED->LED_GREEN;
     interface->onBoardLED->statusLED(100,0); 
     this->NUMBER_OF_ONBOARD_SENSORS=this->NUMBER_OF_ONBOARD_SENSORS+1;
     this->MotionSensorAvail = true; 
-    this->mserial->printStrln("done.");
   }
 }
 

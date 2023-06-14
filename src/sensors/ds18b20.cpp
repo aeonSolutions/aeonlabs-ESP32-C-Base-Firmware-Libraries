@@ -91,8 +91,8 @@ void DS18B20_SENSOR::ProbeSensorStatus(uint8_t sendTo){
     this->sensors.setResolution(this->insideThermometer, 9);
 
 
-    dataStr += "\n " +  this->interface->DeviceTranslation("probe_resolution") + ": ";
-    dataStr += String(this->sensors.getResolution(this->insideThermometer), DEC) + "\n\n"; 
+    dataStr += "\n" +  this->interface->DeviceTranslation("probe_resolution") + ": ";
+    dataStr += String(this->sensors.getResolution(this->insideThermometer), DEC) + "\n"; 
     
     this->interface->sendBLEstring( dataStr, sendTo);  
 }

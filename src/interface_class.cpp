@@ -112,6 +112,9 @@ void INTERFACE_CLASS::settings_defaults(){
   this->config.language ="en";
 
   this->LIGHT_SLEEP_EN=false;
+
+  this->config.gmtOffset_sec = 0;
+  this->config.daylightOffset_sec = 3600;
   
   this->mserial->printStrln("settings defaults loaded.");
 }

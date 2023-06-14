@@ -62,6 +62,7 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
         void init(INTERFACE_CLASS* interface,  M_WIFI_CLASS* mWifi, COFFEE_MACHINE_CLASS* coffeeMachine );
         void handleNewMessages(int numNewMessages);
         void runTelegramBot();
+        bool makeCup(String chat_id, String what);
 };
 
 #endif

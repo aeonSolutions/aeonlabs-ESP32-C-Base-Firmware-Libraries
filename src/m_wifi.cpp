@@ -56,7 +56,7 @@ M_WIFI_CLASS::M_WIFI_CLASS(){
 void M_WIFI_CLASS::init(INTERFACE_CLASS* interface, FILE_CLASS* drive, ONBOARD_LED_CLASS* onboardLED){
     this->drive = drive;
     this->interface=interface;
-    this->interface->mserial->printStr("init wifi ...");
+    this->interface->mserial->printStrln("======= init wifi  =======");
     this->onboardLED=onboardLED;
     
     this->REQUEST_DELTA_TIME_GEOLOCATION  = 10*60*1000; // 10 min 
@@ -72,11 +72,14 @@ void M_WIFI_CLASS::init(INTERFACE_CLASS* interface, FILE_CLASS* drive, ONBOARD_L
     
     WiFi.onEvent(WIFIevent);
     WiFi.onEvent(WiFiGotIP, WiFiEvent_t::ARDUINO_EVENT_WIFI_STA_GOT_IP);
-
-    configTime(this->interface->config.gmtOffset_sec, this->interface->config.daylightOffset_sec, this->config.ntpServer.c_str());
+    
+    this->settings_defaults();
+    
+    this->init_NTP_Time((char*) this->config.ntpServer.c_str(), this->interface->config.gmtOffset_sec, this->interface->config.daylightOffset_sec, this->config.NTP_request_interval);
     
     this->BLE_IS_DEVICE_CONNECTED=false;
-    this->interface->mserial->printStrln("done");
+
+    this->interface->mserial->printStrln("======  done  ==========");
 }
 // **************************************************
 
@@ -87,7 +90,8 @@ void M_WIFI_CLASS::settings_defaults(){
   this->BLE_IS_DEVICE_CONNECTED=false;
   this->config.DEVICE_BLE_NAME="AeonHome 12A";
   this->forceFirmwareUpdate=false;
-  
+  this->config.ntpServer = "pool.ntp.org";
+
   this->clear_wifi_networks(false);
   
    this->interface->mserial->printStrln("wifi settings defaults loaded.");
@@ -177,13 +181,13 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
     // Connect to Wi-Fi using wifiMulti (connects to the SSID with strongest connection)
     this->interface->mserial->printStr( "# " );
     if(this->wifiMulti->run(this->connectionTimeout) == WL_CONNECTED) {        
-      this->interface->mserial->printStrln( "Connection Details");
-      this->interface->mserial->printStrln( "   Network : " + String( WiFi.SSID() ) + " (" + String( RSSIToPercent(WiFi.RSSI() ) ) + ")" );
+      this->interface->mserial->printStrln( "\n\nConnection Details");
+      this->interface->mserial->printStrln( "   Network : " + String( WiFi.SSID() ) + " (" + String( RSSIToPercent(WiFi.RSSI() ) ) + "% )" );
       this->interface->mserial->printStrln( "        IP : "+WiFi.localIP().toString());
       this->interface->mserial->printStrln( "   Gateway : "+WiFi.gatewayIP().toString());
 
       if(!Ping.ping("www.google.com", 3)){
-        this->interface->mserial->printStrln( "no Internet connectivity found.");
+        this->interface->mserial->printStrln( "\nno Internet connectivity found.");
       }else{
         //init time
         configTime(this->interface->config.gmtOffset_sec, this->interface->config.daylightOffset_sec, this->config.ntpServer.c_str());
@@ -219,7 +223,7 @@ void M_WIFI_CLASS::clear_wifi_networks(bool saveSettings){
 
 bool M_WIFI_CLASS::add_wifi_network(String  ssid, String password){
   if (this->config.ssid[0] == NULL)
-    this->clear_wifi_networks();
+    this->clear_wifi_networks(false);
 
   for(int i=0; i<5 ; i++){
     if (this->config.ssid[i] == ssid){
@@ -313,15 +317,17 @@ void M_WIFI_CLASS::WIFIscanNetworks(bool override){
   if (n == 0) {
     this->interface->sendBLEstring( "no nearby WIFI networks found\n", mSerial::DEBUG_ALL_USB_UART_BLE);
   } else {
-    dataStr = "\n" + String(n) + " WiFi networks nearby:\n";
-    this->interface->sendBLEstring(dataStr , mSerial::DEBUG_ALL_USB_UART_BLE);
+    dataStr = "\n=====    " + String(n) + " WiFi networks nearby =============\n";
     for (int i = 0; i < n; ++i) {
       // Print SSID and RSSI for each network found
-      dataStr = String(i + 1) + ": " + String(WiFi.SSID(i)) + " (" + String(WiFi.RSSI(i)) + ")";
-      dataStr += (WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? " \n" : "*\n";
-      this->interface->sendBLEstring(dataStr, mSerial::DEBUG_ALL_USB_UART_BLE);
-      delay(10);
+      dataStr += this->interface->mserial->padString( String(i + 1), 4)+ ": ";
+      dataStr += this->interface->mserial->padString( String(WiFi.SSID(i)), 35);
+      dataStr += " RSSI:" + this->interface->mserial->padString( String(WiFi.RSSI(i)), 4) + "db (";
+      dataStr +=  this->interface->mserial->padString( String( RSSIToPercent(WiFi.RSSI() ) ), 4) + "%)";
+      dataStr += (WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? " pwd: no\n" : " pwd: yes\n";
     }
+    dataStr += "===============================\n";
+    this->interface->sendBLEstring(dataStr, mSerial::DEBUG_ALL_USB_UART_BLE);
   }  
 }
 
@@ -363,9 +369,6 @@ void M_WIFI_CLASS::init_NTP_Time(char* ntpServer_, long gmtOffset_sec_, int dayl
 
 bool M_WIFI_CLASS::saveSettings(fs::FS &fs){
 
-  
-  this->interface->mserial->printStrln("Saving the Smart Device WIFI settings...");
-
   if (fs.exists("/wifi_settings.cfg") )
     fs.remove("/wifi_settings.cfg");
 
@@ -393,6 +396,7 @@ bool M_WIFI_CLASS::saveSettings(fs::FS &fs){
   settingsFile.print( this->config.DEVICE_BLE_NAME + String(';'));
 
   settingsFile.close();
+  this->interface->mserial->printStrln("WIFI settings saved");
   return true;
 }
 
@@ -548,25 +552,26 @@ void M_WIFI_CLASS::updateInternetTime(){
 
   long diff= (millis()- this->NTP_last_request);
   if(abs(diff)< this->config.NTP_request_interval && this->NTP_last_request!=0){
-    this->interface->mserial->printStrln("Internet Time (NTP) is up to date. ");
+    this->interface->mserial->printStrln("\nInternet Time (NTP) is up to date. ");
     return;
   }
   this->NTP_last_request=millis();
 
-  this->interface->mserial->printStrln("Requesting Internet Time (NTP) to "+ String(this->config.ntpServer));
+  this->interface->mserial->printStrln("\nRequesting Internet Time (NTP) to "+ String(this->config.ntpServer));
   if(!getLocalTime(&this->interface->timeinfo)){
     this->interface->mserial->printStrln("Failed to obtain Internet Time. Current System Time is " + String(this->interface->rtc.getDateTime(true)) , this->interface->mserial->DEBUG_TYPE_ERRORS);
     return;
   }else{
-    this->interface->mserial->printStr("Internet Time is ");
-    Serial.println(&this->interface->timeinfo, "%A, %B %d %Y %H:%M:%S");
+    this->interface->mserial->printStr("Internet Time is: ");
+    this->interface->mserial->printStr( String(this->interface->timeinfo.tm_mday) + "," + String( this->months[this->interface->timeinfo.tm_mon] ) + " " + String( this->interface->timeinfo.tm_mday ) + " " + String( 1900 + this->interface->timeinfo.tm_year ) + " "  );
+    this->interface->mserial->printStrln( String( this->interface->timeinfo.tm_hour ) + ":" + String( this->interface->timeinfo.tm_min ) + ":" + String( this->interface->timeinfo.tm_sec ) );
 
     this->interface->rtc.setTimeStruct(this->interface->timeinfo); 
 
     //this->interface->rtc.setTime(this->interface->timeinfo.tm_hour, this->interface->timeinfo.tm_min, this->interface->timeinfo.tm_sec,
     //                              this->interface->timeinfo.tm_mday, this->interface->timeinfo.tm_mon,this->interface->timeinfo.tm_year); 
 
-    this->interface->mserial->printStrln("Local Time is: " + String(this->interface->rtc.getDateTime(true)));
+    this->interface->mserial->printStrln("Local Time is : " + String(this->interface->rtc.getDateTime(true)) +"\n");
   }
 }
 

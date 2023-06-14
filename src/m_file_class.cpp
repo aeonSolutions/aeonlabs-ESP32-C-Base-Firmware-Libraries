@@ -88,10 +88,10 @@ bool FILE_CLASS::init(fs::LittleFSFS &fs, String partitionName, uint8_t maxFiles
 
 // ************************************************************
 void FILE_CLASS::partition_info(){
-    this->mserial->printStrln("\nStorage Partition list:", mSerial::DEBUG_TYPE_VERBOSE, mSerial::DEBUG_ALL_USB_UART_BLE);
+    this->mserial->printStrln("\n================= Storage Partition list =================", mSerial::DEBUG_TYPE_VERBOSE, mSerial::DEBUG_ALL_USB_UART_BLE);
     partloop(ESP_PARTITION_TYPE_DATA);
     partloop(ESP_PARTITION_TYPE_APP);
-
+    this->mserial->printStrln("=================    =================", mSerial::DEBUG_TYPE_VERBOSE, mSerial::DEBUG_ALL_USB_UART_BLE);
 }
 
 void FILE_CLASS::partloop(esp_partition_type_t part_type) {
@@ -101,7 +101,9 @@ void FILE_CLASS::partloop(esp_partition_type_t part_type) {
   while (iterator) {
      next_partition = esp_partition_get(iterator);
      if (next_partition != NULL) {
-      String dataStr = "partition addr: 0x" +String(next_partition->address, HEX) + "    size: " + addThousandSeparators( std::string( String(next_partition->size, DEC).c_str() ) )  + " bytes     label: " + String(next_partition->label) ;  
+      String dataStr = this->interface->mserial->padString("partition addr: 0x" +String(next_partition->address, HEX), 25) + "    ";
+      dataStr += this->interface->mserial->padString("size: " + addThousandSeparators( std::string( String(next_partition->size, DEC).c_str() ) )  + " bytes", 23) + "     ";
+      dataStr += this->interface->mserial->padString("label: " + String(next_partition->label), 15) ;  
       this->mserial->printStrln(dataStr, mSerial::DEBUG_TYPE_VERBOSE, mSerial::DEBUG_ALL_USB_UART_BLE);
       iterator = esp_partition_next(iterator);
     }

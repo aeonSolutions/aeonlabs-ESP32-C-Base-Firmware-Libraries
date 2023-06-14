@@ -44,12 +44,10 @@ SHT3X_SENSOR::SHT3X_SENSOR() {
 
 void SHT3X_SENSOR::init(INTERFACE_CLASS* interface, uint8_t SHT3X_ADDRESS){
   this->interface=interface;
-  this->interface->mserial->printStrln("\ninit SHT3x sensor:");
+  this->interface->mserial->printStr("init SHT3x sensor...");
   this->SHT3X_ADDRESS = SHT3X_ADDRESS;
 
   this->sht3x= new SHT31();
-  this->startSHT3X();
-
   this->interface->mserial->printStrln("done.");
 }
 
