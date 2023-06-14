@@ -83,6 +83,7 @@ class M_WIFI_CLASS {
 
   public:
     String OTA_FIRMWARE_SERVER_URL;
+    bool ALWAYS_ON_WIFI;
 
     typedef struct{
       // firmmware update  ***************************
@@ -148,7 +149,7 @@ uint8_t RSSIToPercent(long rssi);
 void startAP();
 
 bool add_wifi_network( String ssid, String password);
-void clear_wifi_networks();
+void clear_wifi_networks(bool saveSettings= true);
 int getNumberWIFIconfigured();
 void setNumberWIFIconfigured(uint8_t num);
 

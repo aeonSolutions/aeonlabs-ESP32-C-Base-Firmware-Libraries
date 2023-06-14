@@ -33,6 +33,7 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 */
 
 #include "../../interface_class.h"
+#include "../../mserial.h"
 
 #ifndef OneWire_h
   #include "OneWire.h" 
@@ -64,7 +65,7 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
       DS18B20_SENSOR();
       void init(INTERFACE_CLASS* interface,  uint8_t EXT_IO_ANALOG_PIN);
       bool requestMeasurements();
-      void ProbeSensorStatus(uint8_t sendTo);
+      void ProbeSensorStatus(uint8_t sendTo = mSerial::DEBUG_ALL_USB_UART_BLE);
 
       bool commands(String $BLE_CMD, uint8_t sendTo );
  

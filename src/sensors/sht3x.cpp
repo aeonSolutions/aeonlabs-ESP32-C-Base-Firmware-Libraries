@@ -36,15 +36,15 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 #include "Arduino.h"
 
 SHT3X_SENSOR::SHT3X_SENSOR() {
-  this->SHT3X_ADDRESS = 0x38;
+  this->SHT3X_ADDRESS = 0x44;
   this->numSensors=2;
-  this->measurement = new float[numSensors];
+  this->measurement = new float[numSensors] {0.0, 0.0};
   this->measurement_label = new String[2] {"Temperature", "Humidity"};
 }
 
 void SHT3X_SENSOR::init(INTERFACE_CLASS* interface, uint8_t SHT3X_ADDRESS){
   this->interface=interface;
-  this->interface->mserial->printStr("\ninit AHT20 sensor ...");
+  this->interface->mserial->printStrln("\ninit SHT3x sensor:");
   this->SHT3X_ADDRESS = SHT3X_ADDRESS;
 
   this->sht3x= new SHT31();
@@ -55,15 +55,13 @@ void SHT3X_SENSOR::init(INTERFACE_CLASS* interface, uint8_t SHT3X_ADDRESS){
 
 // ********************************************************
 void SHT3X_SENSOR::startSHT3X() {
-    Wire.begin();
-
     bool result = this->sht3x->begin();  
     if (result){
         this->sensorAvailable = true;
-        this->interface->mserial->printStr("SHT3x sensor status code: " + String(this->sht3x->readStatus()));
+        this->interface->mserial->printStrln(" status code: " + String(this->sht3x->readStatus()));
     }else{
         this->sensorAvailable = false;
-        this->interface->mserial->printStrln("SHT3x sensor not found at specified address (0x"+String(this->SHT3X_ADDRESS, HEX)+")");
+        this->interface->mserial->printStrln("not found at specified address (0x"+String(this->SHT3X_ADDRESS, HEX)+")");
         this->interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
         this->interface->onBoardLED->statusLED(100,2); 
     }

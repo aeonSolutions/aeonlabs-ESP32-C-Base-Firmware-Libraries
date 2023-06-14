@@ -38,7 +38,7 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 DS18B20_SENSOR::DS18B20_SENSOR() {
   this->EXT_IO_ANALOG_PIN=2;
   this->numSensors=1;
-  this->measurement = new float[numSensors];
+  this->measurement = new float[numSensors]  {0.0};
   this->measurement_label = new String[1] {"Temperature"};
 }
 

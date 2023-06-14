@@ -38,7 +38,7 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 AHT20_SENSOR::AHT20_SENSOR() {
   this->AHT20_ADDRESS = 0x38;
   this->numSensors=2;
-  this->measurement = new float[numSensors];
+  this->measurement = new float[numSensors]  {0.0, 0.0};
   this->measurement_label = new String[2] {"Temperature", "Humidity"};
 }
 
@@ -55,9 +55,6 @@ void AHT20_SENSOR::init(INTERFACE_CLASS* interface, uint8_t AHT20_ADDRESS){
 
 // ********************************************************
 void AHT20_SENSOR::startAHT() {
-  
-    Wire.begin();
-
     bool result = this->aht20->begin();  
     if (result){
         this->sensorAvailable = true;
