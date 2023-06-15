@@ -39,7 +39,7 @@ LSM3DS6_SENSOR::LSM3DS6_SENSOR() {
   this->LSM6DS3_ADDRESS = 0x6B;
   this->numSensors=7;
   this->sensor_n_errors=0;
-  this->measurement = new float[this->numSensors] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  this->measurement = new float[this->numSensors] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
   this->measurement_label = new String[this->numSensors] {"motion x", "motion y", "motion z", "gyro x", "gyro y", "gyro z", "temperature"};
   this->errorMessage = "";
   this->sensorAvailable=false;

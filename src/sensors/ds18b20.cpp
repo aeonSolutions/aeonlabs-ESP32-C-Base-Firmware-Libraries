@@ -96,7 +96,8 @@ bool DS18B20_SENSOR::startDS18B20(uint8_t sendTo){
     dataStr += "\n" +  this->interface->DeviceTranslation("probe_resolution") + ": ";
     dataStr += String(this->sensors.getResolution(this->insideThermometer), DEC) + "\n"; 
     
-    this->interface->sendBLEstring( dataStr, sendTo);  
+    this->interface->sendBLEstring( dataStr, sendTo); 
+    return true; 
 }
 
 // *********************************************************

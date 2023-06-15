@@ -31,13 +31,12 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
  for Open Hardware & Source Development for more information.
 
 */
-
 #include "vl6180x.h"
 #include "Arduino.h"
 
 VL6180X_SENSOR::VL6180X_SENSOR() {
   this->VL6180X_ADDRESS = 0x38;
-  this->numSensors=2;
+  this->numSensors = 2;
   this->measurement = new float[this->numSensors] {0.0, 0.0};
   this->measurement_label = new String[this->numSensors] {"lux", "distance"};
   this->errorMessage = "";
