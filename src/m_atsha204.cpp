@@ -1,7 +1,6 @@
 
 #include "m_atsha204.h"
-#include "interface_class.h"
-#include "sha204_i2c.h"
+#include "security/sha204_i2c.h"
 
 // *************************************************************
 

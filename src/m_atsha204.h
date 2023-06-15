@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "m_math.h"
-#include "sha204_i2c.h"
+#include "security/sha204_i2c.h"
 #include "interface_class.h"
 
 #ifndef ATSHA204_DEF

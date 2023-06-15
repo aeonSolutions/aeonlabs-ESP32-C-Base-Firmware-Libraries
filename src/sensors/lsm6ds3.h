@@ -33,7 +33,7 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 */
 
 #ifndef INTERFACE_CLASS_DEF
-  #include "../../interface_class.h"
+  #include "../interface_class.h"
 #endif
 
 #include <Wire.h>

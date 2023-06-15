@@ -32,8 +32,8 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 
 */
 
-#include "../../interface_class.h"
-#include "../../mserial.h"
+#include "../interface_class.h"
+#include "../mserial.h"
 
 #ifndef OneWire_h
   #include "OneWire.h" 

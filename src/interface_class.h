@@ -37,15 +37,17 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 #include  "BLECharacteristic.h"
 #include "time.h"
 #include "ESP32Time.h"
-#include "sha204_i2c.h"
-#include "mserial.h"
 #include "FS.h"
 #include <LittleFS.h>
-#include "onboard_led.h"
 #include <ArduinoJson.h>
 #include <HardwareSerial.h>
 #include <semphr.h>
 #include "Wire.h"
+
+#include "security/sha204_i2c.h"
+#include "mserial.h"
+#include "onboard_led.h"
+
 
 #ifndef INTERFACE_CLASS_DEF
   #define INTERFACE_CLASS_DEF
@@ -147,7 +149,7 @@ class INTERFACE_CLASS {
 
        // RTC SETUP *******************
     ESP32Time rtc;  // offset in seconds GMT
-    struct tm timeinfo;
+    tm timeinfo;
 
 
     // Sensors ****************************************

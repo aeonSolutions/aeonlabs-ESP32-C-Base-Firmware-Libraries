@@ -33,12 +33,11 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 */
 
 #include "m_wifi.h"
-#include "time.h"
 #include "ESP32Time.h"
 #include "HTTPClient.h"
 #include "Config.h"
 #include "m_file_functions.h"
-#include "github_cert.h"
+#include "cert/github_cert.h"
 #include "esp_wifi.h"
 
 #ifndef ESP32PING_H

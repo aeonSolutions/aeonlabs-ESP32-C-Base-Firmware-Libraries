@@ -39,9 +39,9 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 #include <driver/i2c.h>
 
 //#include "src/sensors/aht20.h"
-#include "src/sensors/sht3x.h"
+#include "sensors/sht3x.h"
 
-#include "src/sensors/lsm6ds3.h"
+#include "sensors/lsm6ds3.h"
 
 #ifndef ONBOARD_SENSORS_DEF
   #define ONBOARD_SENSORS_DEF

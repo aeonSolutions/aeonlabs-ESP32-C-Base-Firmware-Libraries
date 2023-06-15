@@ -33,7 +33,6 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 */
 
 #include <Arduino.h>
-#include "time.h"
 #include "ESP32Time.h"
 
 #ifndef  M_FILE_FUNCTIONS_DEF
