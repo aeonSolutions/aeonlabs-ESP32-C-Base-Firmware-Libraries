@@ -38,8 +38,8 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 SHT3X_SENSOR::SHT3X_SENSOR() {
   this->SHT3X_ADDRESS = 0x44;
   this->numSensors=2;
-  this->measurement = new float[numSensors] {0.0, 0.0};
-  this->measurement_label = new String[2] {"Temperature", "Humidity"};
+  this->measurement = new float[this->numSensors] {0.0, 0.0};
+  this->measurement_label = new String[this->numSensors] {"Temperature", "Humidity"};
 }
 
 void SHT3X_SENSOR::init(INTERFACE_CLASS* interface, uint8_t SHT3X_ADDRESS){
@@ -52,16 +52,18 @@ void SHT3X_SENSOR::init(INTERFACE_CLASS* interface, uint8_t SHT3X_ADDRESS){
 }
 
 // ********************************************************
-void SHT3X_SENSOR::startSHT3X() {
+bool SHT3X_SENSOR::startSHT3X() {
     bool result = this->sht3x->begin();  
     if (result){
         this->sensorAvailable = true;
         this->interface->mserial->printStrln(" status code: " + String(this->sht3x->readStatus()));
+        return true;
     }else{
         this->sensorAvailable = false;
         this->interface->mserial->printStrln("not found at specified address (0x"+String(this->SHT3X_ADDRESS, HEX)+")");
         this->interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
         this->interface->onBoardLED->statusLED(100,2); 
+        return false;
     }
 }
 
@@ -78,16 +80,16 @@ void SHT3X_SENSOR::startSHT3X() {
 
     if (isnan(sht_temp)) { // check if 'is not a number'
       this->interface->mserial->printStrln("Failed to read temperature");
-      this->measurement[0] = -500;
+      this->measurement[1] = -500;
     }else{
-      this->measurement[0] = sht_temp;
+      this->measurement[1] = sht_temp;
     }
 
     if (isnan(sht_humidity)) { // check if 'is not a number'
       this->interface->mserial->printStrln("Failed to read humidity");
-      this->measurement[1] = -500;
+      this->measurement[0] = -500;
     }else{
-      this->measurement[1] = sht_humidity;
+      this->measurement[0] = sht_humidity;
     }
 
     return true;

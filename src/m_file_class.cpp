@@ -101,9 +101,9 @@ void FILE_CLASS::partloop(esp_partition_type_t part_type) {
   while (iterator) {
      next_partition = esp_partition_get(iterator);
      if (next_partition != NULL) {
-      String dataStr = this->interface->mserial->padString("partition addr: 0x" +String(next_partition->address, HEX), 25) + "    ";
-      dataStr += this->interface->mserial->padString("size: " + addThousandSeparators( std::string( String(next_partition->size, DEC).c_str() ) )  + " bytes", 23) + "     ";
-      dataStr += this->interface->mserial->padString("label: " + String(next_partition->label), 15) ;  
+      String dataStr = this->mserial->padString("partition addr: 0x" +String(next_partition->address, HEX), 25) + "  ";
+      dataStr += "size: " + this->mserial->padString( addThousandSeparators( std::string( String(next_partition->size, DEC).c_str() ) )  + " bytes", 16) + "   ";
+      dataStr += "label: " + this->mserial->padString( String(next_partition->label), 8) ;  
       this->mserial->printStrln(dataStr, mSerial::DEBUG_TYPE_VERBOSE, mSerial::DEBUG_ALL_USB_UART_BLE);
       iterator = esp_partition_next(iterator);
     }

@@ -32,12 +32,16 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 
 */
 
-#include "SparkFunLSM6DS3.h"
+
 #include "mserial.h"
 #include "interface_class.h"
 #include <Wire.h>
+#include <driver/i2c.h>
+
 //#include "src/sensors/aht20.h"
 #include "src/sensors/sht3x.h"
+
+#include "src/sensors/lsm6ds3.h"
 
 #ifndef ONBOARD_SENSORS_DEF
   #define ONBOARD_SENSORS_DEF
@@ -56,13 +60,9 @@ class ONBOARD_SENSORS {
     
     //AHT20_SENSOR* onboardTHsensor;
     SHT3X_SENSOR* onboardTHsensor;
+    LSM3DS6_SENSOR* onboardMotionSensor;
 
     // LSM6DS3 motion sensor  ******************************
-    uint8_t LSM6DS3_ADDRESS= 0x6B; // default address is 0x6B
-    uint8_t IMU_CS_IO =38;
-    bool MotionSensorAvail;
-    LSM6DS3 LSM6DS3sensor = LSM6DS3( I2C_MODE, LSM6DS3_ADDRESS);
-    float LSM6DS3_errors, LSM6DS3_Motion_X, LSM6DS3_Motion_Y, LSM6DS3_Motion_Z, LSM6DS3_GYRO_X,  LSM6DS3_GYRO_Y,  LSM6DS3_GYRO_Z,  LSM6DS3_TEMP;
 
     bool MOTION_DETECT_EN;
     float ROLL_THRESHOLD ; 

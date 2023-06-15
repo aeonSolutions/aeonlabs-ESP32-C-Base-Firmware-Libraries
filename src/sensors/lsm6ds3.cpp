@@ -32,87 +32,67 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 
 */
 
-#include "vl6180x.h"
+#include "lsm6ds3.h"
 #include "Arduino.h"
 
-VL6180X_SENSOR::VL6180X_SENSOR() {
-  this->VL6180X_ADDRESS = 0x38;
-  this->numSensors=2;
-  this->measurement = new float[this->numSensors] {0.0, 0.0};
-  this->measurement_label = new String[this->numSensors] {"lux", "distance"};
+LSM3DS6_SENSOR::LSM3DS6_SENSOR() {
+  this->LSM6DS3_ADDRESS = 0x6B;
+  this->numSensors=7;
+  this->sensor_n_errors=0;
+  this->measurement = new float[this->numSensors] {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+  this->measurement_label = new String[this->numSensors] {"motion x", "motion y", "motion z", "gyro x", "gyro y", "gyro z", "temperature"};
   this->errorMessage = "";
+  this->sensorAvailable=false;
 }
 
-void VL6180X_SENSOR::init(INTERFACE_CLASS* interface){
+void LSM3DS6_SENSOR::init(INTERFACE_CLASS* interface){
   this->interface=interface;
-  this->vl6180x = new Adafruit_VL6180X();  
+  this->lsm6ds3 = new LSM6DS3( I2C_MODE, this->LSM6DS3_ADDRESS);
 }
 
 // ********************************************************
-void VL6180X_SENSOR::startVL6180X() {
-  this->interface->mserial->printStr("\ninit VL6180X sensor ...");
-  bool result = this->vl6180x->begin();  
-  if (result){
-    this->sensorAvailable = true;
-    this->interface->mserial->printStrln("done.");
-  }else{
-    this->sensorAvailable = false;
-    this->interface->mserial->printStrln("VL6180X sensor not found");
-    this->interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
-    this->interface->onBoardLED->statusLED(100,2); 
+bool LSM3DS6_SENSOR::startLSM6DS3() {
+  if ( this->lsm6ds3->begin() != 0 ) {
+    this->interface->mserial->printStrln("\nError starting the motion sensor at specified address (0x"+String(this->LSM6DS3_ADDRESS, HEX)+")");
+    interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
+    interface->onBoardLED->statusLED(100,2); 
+    this->sensorAvailable=false;
+    return false;
+  } else {
+    this->interface->mserial->printStrln("\ninit motion sensor...done");
+    interface->onBoardLED->led[0] = interface->onBoardLED->LED_GREEN;
+    interface->onBoardLED->statusLED(100,0); 
+    this->sensorAvailable = true; 
   }
+  return true;
 }
 
 // *************************************************
- bool VL6180X_SENSOR::requestMeasurements(){
+ bool LSM3DS6_SENSOR::requestMeasurements(){
     if (this->sensorAvailable == false) {
-      startVL6180X(); 
+      this->startLSM6DS3(); 
       if (this->sensorAvailable == false) 
         return false;
     }  
     
-    this->measurement[0] = this->vl6180x->readLux(VL6180X_ALS_GAIN_5);    
-    this->measurement[1] = this->vl6180x->readRange(); // milimeters
-    
-    uint8_t status = this->vl6180x->readRangeStatus();
-    if (status == VL6180X_ERROR_NONE)
-      return true;
+  this->measurement[0] = this->lsm6ds3->readFloatAccelX();
+  this->measurement[1] = this->lsm6ds3->readFloatAccelY();
+  this->measurement[2] = this->lsm6ds3->readFloatAccelZ();
+  this->measurement[3] = this->lsm6ds3->readFloatGyroX();
+  this->measurement[4] = this->lsm6ds3->readFloatGyroY();
+  this->measurement[5] = this->lsm6ds3->readFloatGyroZ();
+  this->measurement[6] = this->lsm6ds3->readTempC();
+  //mserial->printStrln(String(LSM6DS3sensor.readTempF()));
 
-    // Some error occurred, print it out!
-    if  ((status >= VL6180X_ERROR_SYSERR_1) && (status <= VL6180X_ERROR_SYSERR_5)) {
-      this->errorMessage = "system error";
-    }
-    else if (status == VL6180X_ERROR_ECEFAIL) {
-      this->errorMessage = "ECE failure";
-    }
-    else if (status == VL6180X_ERROR_NOCONVERGE) {
-      this->errorMessage = "No convergence";
-    }
-    else if (status == VL6180X_ERROR_RANGEIGNORE) {
-      this->errorMessage = "Ignoring range";
-    }
-    else if (status == VL6180X_ERROR_SNR) {
-      this->errorMessage = "Signal/noise error";
-    }
-    else if (status == VL6180X_ERROR_RAWUFLOW) {
-      this->errorMessage = "raw reading underflow";
-    }
-    else if (status == VL6180X_ERROR_RAWOFLOW) {
-      this->errorMessage = "raw reading overlfow";
-    }
-    else if (status == VL6180X_ERROR_RANGEUFLOW) {
-      this->errorMessage = "rnge reding underflow";
-    }
-    else if (status == VL6180X_ERROR_RANGEOFLOW) {
-      this->errorMessage = "range reading overflow";
-    }
+  this->sensor_n_errors = this->lsm6ds3->nonSuccessCounter;
+
     return false;
  }
 
 
 // *********************************************************
- bool VL6180X_SENSOR::helpCommands(uint8_t sendTo ){
-    String dataStr="VL6180x commands:\n" \
+ bool LSM3DS6_SENSOR::helpCommands(uint8_t sendTo ){
+    String dataStr="LSM6DS3 commands:\n" \
                     "$help $?                           - View available GBRL commands\n" \
                     "$lang set [country code]           - Change the smart device language\n\n";
 
@@ -121,7 +101,7 @@ void VL6180X_SENSOR::startVL6180X() {
  }
 // ******************************************************************************************
 
-bool VL6180X_SENSOR::commands(String $BLE_CMD, uint8_t sendTo ){
+bool LSM3DS6_SENSOR::commands(String $BLE_CMD, uint8_t sendTo ){
   String dataStr="";
   if($BLE_CMD.indexOf("$lang dw ")>-1){
 

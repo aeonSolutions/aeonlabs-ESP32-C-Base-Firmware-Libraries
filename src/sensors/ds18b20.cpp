@@ -38,8 +38,8 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 DS18B20_SENSOR::DS18B20_SENSOR() {
   this->EXT_IO_ANALOG_PIN=2;
   this->numSensors=1;
-  this->measurement = new float[numSensors]  {0.0};
-  this->measurement_label = new String[1] {"Temperature"};
+  this->measurement = new float[this->numSensors]  {0.0};
+  this->measurement_label = new String[this->numSensors] {"Temperature"};
 }
 
 void DS18B20_SENSOR::init(INTERFACE_CLASS* interface, uint8_t EXT_IO_ANALOG_PIN){
@@ -61,11 +61,14 @@ void DS18B20_SENSOR::init(INTERFACE_CLASS* interface, uint8_t EXT_IO_ANALOG_PIN)
  }
 
 // ************************************************
-void DS18B20_SENSOR::ProbeSensorStatus(uint8_t sendTo){
+bool DS18B20_SENSOR::startDS18B20(uint8_t sendTo){
     String dataStr="";
-    this->sensorAvailable= true; 
-    
     dataStr= this->interface->DeviceTranslation("num_temp_probes") + " " + String(this->sensors.getDS18Count(), DEC) +"\n";
+    if ( this->sensors.getDS18Count()==0 ){
+      this->sensorAvailable= false;
+      this->interface->sendBLEstring( dataStr, sendTo);  
+      return false;       
+    }
 
     // report parasite power requirements
     dataStr += this->interface->DeviceTranslation("parasite_power") + ": "; 
@@ -89,7 +92,6 @@ void DS18B20_SENSOR::ProbeSensorStatus(uint8_t sendTo){
 
     // set the resolution to 9 bit (Each Dallas/Maxim device is capable of several different resolutions)
     this->sensors.setResolution(this->insideThermometer, 9);
-
 
     dataStr += "\n" +  this->interface->DeviceTranslation("probe_resolution") + ": ";
     dataStr += String(this->sensors.getResolution(this->insideThermometer), DEC) + "\n"; 

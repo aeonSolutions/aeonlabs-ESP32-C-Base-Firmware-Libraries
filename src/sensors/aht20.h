@@ -63,7 +63,7 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
       AHT20_SENSOR();
       void init(INTERFACE_CLASS* interface,  uint8_t AHT20_ADDRESS);
       bool requestMeasurements();
-      void startAHT();
+      bool startAHT();
 
       bool commands(String $BLE_CMD, uint8_t sendTo );
  

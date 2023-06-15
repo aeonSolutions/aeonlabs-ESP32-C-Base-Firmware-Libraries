@@ -321,7 +321,7 @@ void M_WIFI_CLASS::WIFIscanNetworks(bool override){
     for (int i = 0; i < n; ++i) {
       // Print SSID and RSSI for each network found
       dataStr += this->interface->mserial->padString( String(i + 1), 4)+ ": ";
-      dataStr += this->interface->mserial->padString( String(WiFi.SSID(i)), 35);
+      dataStr += this->interface->mserial->padString( String(WiFi.SSID(i)), 33);
       dataStr += " RSSI:" + this->interface->mserial->padString( String(WiFi.RSSI(i)), 4) + "db (";
       dataStr +=  this->interface->mserial->padString( String( RSSIToPercent(WiFi.RSSI() ) ), 4) + "%)";
       dataStr += (WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? " pwd: no\n" : " pwd: yes\n";

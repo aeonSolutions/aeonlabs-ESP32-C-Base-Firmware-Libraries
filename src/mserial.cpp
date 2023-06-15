@@ -229,7 +229,8 @@ delay(20);
 
 /// *************************************
 String mSerial::padString(String str, int size){
-  for(int i= (size-str.length()) ; i<=size; i++ ){
+  uint8_t padLen = str.length();
+  for(int i=0 ; i< ( size - padLen); i++ ){
     str += " ";
   }
 return str;

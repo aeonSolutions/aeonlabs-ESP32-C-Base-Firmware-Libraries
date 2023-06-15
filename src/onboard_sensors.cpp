@@ -59,9 +59,15 @@ void ONBOARD_SENSORS::init(INTERFACE_CLASS* interface, mSerial* mserial){
 
     this->onboardTHsensor = new SHT3X_SENSOR();
     this->onboardTHsensor->init(this->interface, this->HT_SENSOR_ADDRESS);
-    this->onboardTHsensor->startSHT3X();
+    
+    if ( this->onboardTHsensor->startSHT3X() )
+      this->NUMBER_OF_ONBOARD_SENSORS=this->NUMBER_OF_ONBOARD_SENSORS + this->onboardTHsensor->numSensors;
 
-    this->startLSM6DS3();
+    this->onboardMotionSensor = new LSM3DS6_SENSOR();
+    this->onboardMotionSensor->init(this->interface );
+    if ( this->onboardMotionSensor->startLSM6DS3() )
+      this->NUMBER_OF_ONBOARD_SENSORS=this->NUMBER_OF_ONBOARD_SENSORS + this->onboardMotionSensor->numSensors;
+
     this->prevReadings[0] = 0.0;
     this->prevReadings[1] = 0.0;
     this->prevReadings[2] = 0.0;
@@ -87,47 +93,22 @@ void ONBOARD_SENSORS::request_onBoard_Sensor_Measurements(){
 }
 
 
-void ONBOARD_SENSORS::startLSM6DS3(){
-  if ( LSM6DS3sensor.begin() != 0 ) {
-    this->mserial->printStrln("\nError starting the motion sensor at specified address (0x"+String(this->LSM6DS3_ADDRESS, HEX)+")");
-    interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
-    interface->onBoardLED->statusLED(100,2); 
-    this->MotionSensorAvail=false;
-  } else {
-    this->interface->mserial->printStrln("\ninit motion sensor...done");
-    interface->onBoardLED->led[0] = interface->onBoardLED->LED_GREEN;
-    interface->onBoardLED->statusLED(100,0); 
-    this->NUMBER_OF_ONBOARD_SENSORS=this->NUMBER_OF_ONBOARD_SENSORS+1;
-    this->MotionSensorAvail = true; 
-  }
-}
-
 // ********************************************************
 void ONBOARD_SENSORS::getLSM6DS3sensorData() {
-  if (MotionSensorAvail==false){
-    startLSM6DS3();
+  if ( this->onboardMotionSensor->sensorAvailable==false ){
+    if ( this->onboardMotionSensor->startLSM6DS3() )
+      this->NUMBER_OF_ONBOARD_SENSORS=this->NUMBER_OF_ONBOARD_SENSORS + this->onboardMotionSensor->numSensors;
   }
       
-
-  this->prevReadings[0]=LSM6DS3_Motion_X;
-  this->prevReadings[1]=LSM6DS3_Motion_Y;
-  this->prevReadings[2]=LSM6DS3_Motion_Z;
-  this->prevReadings[3]=LSM6DS3_GYRO_X;
-  this->prevReadings[4]=LSM6DS3_GYRO_Y;
-  this->prevReadings[5]=LSM6DS3_GYRO_Z;   
-
+  this->prevReadings[0] = this->onboardMotionSensor->measurement[0];
+  this->prevReadings[1] = this->onboardMotionSensor->measurement[1];
+  this->prevReadings[2] = this->onboardMotionSensor->measurement[2];
+  this->prevReadings[3] = this->onboardMotionSensor->measurement[3];
+  this->prevReadings[4] = this->onboardMotionSensor->measurement[4];
+  this->prevReadings[5] = this->onboardMotionSensor->measurement[5];   
+  this->prevReadings[6] = this->onboardMotionSensor->measurement[6];   
     //Get all parameters
-
-  LSM6DS3_Motion_X=LSM6DS3sensor.readFloatAccelX();
-  LSM6DS3_Motion_Y=LSM6DS3sensor.readFloatAccelY();
-  LSM6DS3_Motion_Z=LSM6DS3sensor.readFloatAccelZ();
-  LSM6DS3_GYRO_X=LSM6DS3sensor.readFloatGyroX();
-  LSM6DS3_GYRO_Y=LSM6DS3sensor.readFloatGyroY();
-  LSM6DS3_GYRO_Z=LSM6DS3sensor.readFloatGyroZ();
-  LSM6DS3_TEMP=LSM6DS3sensor.readTempC();
-  //mserial->printStrln(String(LSM6DS3sensor.readTempF()));
-  LSM6DS3_errors=LSM6DS3sensor.allOnesCounter;
-  LSM6DS3_errors=LSM6DS3sensor.nonSuccessCounter;
+   this->onboardMotionSensor->requestMeasurements();
 }
 
 
@@ -159,10 +140,11 @@ void ONBOARD_SENSORS::initRollTheshold(){
     this->mserial->printStr("Calibration of motion detection.Dont move the device..");
     float X, Y, Z, totalAccel;
     for (int i=0; i<100; i++) {
-      X += this->LSM6DS3_Motion_X;
-      Y += this->LSM6DS3_Motion_Y;
-      Z += this->LSM6DS3_Motion_Z;
-      delay(1);
+      this->onboardMotionSensor->requestMeasurements();
+      X += this->onboardMotionSensor->measurement[0]; 
+      Y += this->onboardMotionSensor->measurement[1];
+      Z += this->onboardMotionSensor->measurement[2];
+      delay(200);
     }
     X /= 10;
     Y /= 10;
@@ -186,10 +168,11 @@ bool ONBOARD_SENSORS::motionDetect(){
 
     float X, Y, Z, totalAccel;
     for (int i=0; i<10; i++) {
-      X += this->LSM6DS3_Motion_X;
-      Y += this->LSM6DS3_Motion_Y;
-      Z += this->LSM6DS3_Motion_Z;
-      delay(1);
+      this->onboardMotionSensor->requestMeasurements();
+      X += this->onboardMotionSensor->measurement[0]; 
+      Y += this->onboardMotionSensor->measurement[1];
+      Z += this->onboardMotionSensor->measurement[2];
+      delay(200);
     }
     X /= 10;
     Y /= 10;
@@ -209,42 +192,45 @@ bool ONBOARD_SENSORS::motionDetect(){
 // *************************************************************
 
 void ONBOARD_SENSORS::I2Cscanner() {
-  this->mserial->printStrln ("I2C scanner. \n Scanning ...");  
-  uint8_t count = 0;
-  String addr;
+    this->interface->mserial->printStrln("\nScanning I2C Bus (SDA IO:"+ String( interface->I2C_SDA_IO_PIN ) +" SCL IO:" + String( interface->I2C_SCL_IO_PIN ) + ")   ============");
+    i2c_config_t conf;
+    conf.mode = I2C_MODE_MASTER;
+    conf.sda_io_num = interface->I2C_SDA_IO_PIN;
+    conf.scl_io_num = interface->I2C_SCL_IO_PIN;
+    conf.sda_pullup_en = false;
+    conf.scl_pullup_en = false;
+    conf.master.clk_speed = 400000;
+    i2c_param_config(I2C_NUM_0, &conf);
 
-  for (uint8_t i = 8; i < 120; i++){
+    i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
+    uint8_t count = 0;
+    esp_err_t res;
+    printf("     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f\n");
+    printf("00:         ");
+    for (uint8_t i = 3; i < 0x78; i++)
+    {
+        i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+        i2c_master_start(cmd);
+        i2c_master_write_byte(cmd, (i << 1) | I2C_MASTER_WRITE, 1 /* expect ack */);
+        i2c_master_stop(cmd);
 
-    Wire.beginTransmission (i);          // Begin I2C transmission Address (i)
-    uint8_t error = Wire.endTransmission();
-    addr="";
-    if (i < 16){
-       addr="0";
+        res = i2c_master_cmd_begin(I2C_NUM_0, cmd, 10 / portTICK_PERIOD_MS);
+        if (i % 16 == 0){
+            printf("\n%.2x:", i);
+        }
+        if (res == 0){
+            printf(" %.2x", i);
+            count++;
+        }else{
+            printf(" --");
+        }
+        i2c_cmd_link_delete(cmd);
     }
-    addr=addr+String(i, HEX);
+    printf("\n");
 
-    if (error == 0) { // Receive 0 = success (ACK response)
-      this->mserial->printStr ("Found address: ");
-      this->mserial->printStr (String(i, DEC));
-      this->mserial->printStr (" (0x");
-      this->mserial->printStr (String(i, HEX));     // PCF8574 7 bit address
-      this->mserial->printStrln (")");
-      count++;
-    } else if (error == 4) {
-      this->mserial->printStr("Unknown error at address 0x");
-      this->mserial->printStrln(addr);
-      interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
-      interface->onBoardLED->statusLED(100,1); 
-    } else{
-    interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
-    interface->onBoardLED->led[1] = interface->onBoardLED->LED_RED;
-    interface->onBoardLED->statusLED(100,2); 
-    }
-  }
-
-  this->mserial->printStr ("Found ");
-  this->mserial->printStr (String(count));        // numbers of devices
-  this->mserial->printStrln (" device(s).");
+  this->interface->mserial->printStr ("Found ");
+  this->interface->mserial->printStr (String(count));        // numbers of devices
+  this->interface->mserial->printStrln (" device(s).");
   if (count == 0) {
       interface->onBoardLED->led[1] = interface->onBoardLED->LED_RED;
       interface->onBoardLED->statusLED(100,2); 
@@ -256,6 +242,8 @@ void ONBOARD_SENSORS::I2Cscanner() {
     interface->onBoardLED->led[1] = interface->onBoardLED->LED_GREEN;
     interface->onBoardLED->statusLED(100,2); 
   }
+  this->interface->mserial->printStrln("  ============ scan completed ================================");
+
 }
 
 // *********************************************************
@@ -305,27 +293,27 @@ bool ONBOARD_SENSORS::gbrl_commands(String $BLE_CMD, uint8_t sendTo){
       return this->helpCommands(sendTo);
   } else if($BLE_CMD=="$ot"){
     this->request_onBoard_Sensor_Measurements();
-    dataStr=String("Current onboard Temperature is: ") + String(roundFloat(this->ONBOARD_TEMP,2)) + String(char(176)) + String("C") +String(char(10));
+    dataStr=String("Current onboard Temperature is: ") + String(roundFloat(this->onboardTHsensor->measurement[1],2)) + String(char(176)) + String("C") +String(char(10));
     this->interface->sendBLEstring( dataStr, sendTo); 
     return true; 
   } else if($BLE_CMD=="$oh"){
     this->request_onBoard_Sensor_Measurements();
-    dataStr=String("Current onboard Humidity is: ") + String(this->ONBOARD_HUMIDITY)+ String(" %") +String(char(10));
+    dataStr=String("Current onboard Humidity is: ") + String(this->onboardTHsensor->measurement[0] )+ String(" %") +String(char(10));
     this->interface->sendBLEstring( dataStr, sendTo);  
     return true; 
   } else if($BLE_CMD=="$oa"){
     this->request_onBoard_Sensor_Measurements();
-    dataStr=String("Current onboard acceleration data ( g ) : ") + String("  X: ")+String(roundFloat(this->LSM6DS3_Motion_X,2)) +"  Y:" + String(roundFloat(this->LSM6DS3_Motion_Y,2)) + "  Z: " + String(roundFloat(this->LSM6DS3_Motion_Z,2)) +String(char(10));
+    dataStr=String("Current onboard acceleration data ( g ) : ") + String("  X: ")+String(roundFloat(this->onboardMotionSensor->measurement[0],2)) +"  Y:" + String(roundFloat(this->onboardMotionSensor->measurement[1],2)) + "  Z: " + String(roundFloat( this->onboardMotionSensor->measurement[2],2)) +String(char(10));
     this->interface->sendBLEstring( dataStr, sendTo);  
     return true; 
   } else if($BLE_CMD=="$og"){
     this->request_onBoard_Sensor_Measurements();
-    dataStr=String("Current onboard angular data ( dps ): ") + String("  X: ") + String(roundFloat(this->LSM6DS3_GYRO_X,2)) +"  Y:" + String(roundFloat(this->LSM6DS3_GYRO_Y,2)) + "  Z: " + String(roundFloat(this->LSM6DS3_GYRO_Z,2)) +String(char(10));
+    dataStr=String("Current onboard angular data ( dps ): ") + String("  X: ") + String(roundFloat( this->onboardMotionSensor->measurement[3] ,2)) +"  Y:" + String(roundFloat( this->onboardMotionSensor->measurement[4] ,2)) + "  Z: " + String(roundFloat( this->onboardMotionSensor->measurement[5] ,2)) +String(char(10));
     this->interface->sendBLEstring( dataStr, sendTo);  
     return true; 
   } else if($BLE_CMD=="$om"){
     this->request_onBoard_Sensor_Measurements();
-    dataStr=String("Current MCU temperature is: ") + String(roundFloat(this->LSM6DS3_TEMP,2))+ String(char(176)) + String("C")  +String(char(10));
+    dataStr=String("Current MCU temperature is: ") + String(roundFloat(this->onboardMotionSensor->measurement[6],2))+ String(char(176)) + String("C")  +String(char(10));
     this->interface->sendBLEstring( dataStr, sendTo);  
     return true; 
   }else if($BLE_CMD.indexOf("$sensor port")>-1){

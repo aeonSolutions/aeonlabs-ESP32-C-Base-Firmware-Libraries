@@ -38,8 +38,8 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 AHT20_SENSOR::AHT20_SENSOR() {
   this->AHT20_ADDRESS = 0x38;
   this->numSensors=2;
-  this->measurement = new float[numSensors]  {0.0, 0.0};
-  this->measurement_label = new String[2] {"Temperature", "Humidity"};
+  this->measurement = new float[this->numSensors]  {0.0, 0.0};
+  this->measurement_label = new String[this->numSensors] {"Temperature", "Humidity"};
 }
 
 void AHT20_SENSOR::init(INTERFACE_CLASS* interface, uint8_t AHT20_ADDRESS){
@@ -52,18 +52,20 @@ void AHT20_SENSOR::init(INTERFACE_CLASS* interface, uint8_t AHT20_ADDRESS){
 }
 
 // ********************************************************
-void AHT20_SENSOR::startAHT() {
-    bool result = this->aht20->begin();  
-    if (result){
-        this->sensorAvailable = true;
-        this->interface->mserial->printStr("AHT sensor status code: " + String(this->aht20->getStatus()));
-        this->interface->mserial->printStrln(" <<>> calibrated: " + String( this->aht20->isCalibrated() == 1 ? "True" : "False" ) );
-    }else{
-        this->sensorAvailable = false;
-        this->interface->mserial->printStrln("AHT sensor not found at specified address (0x"+String(this->AHT20_ADDRESS, HEX)+")");
-        this->interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
-        this->interface->onBoardLED->statusLED(100,2); 
-    }
+bool AHT20_SENSOR::startAHT() {
+  bool result = this->aht20->begin();  
+  if (result){
+    this->sensorAvailable = true;
+    this->interface->mserial->printStr("AHT sensor status code: " + String(this->aht20->getStatus()));
+    this->interface->mserial->printStrln(" <<>> calibrated: " + String( this->aht20->isCalibrated() == 1 ? "True" : "False" ) );
+    return true;  
+  }else{
+    this->sensorAvailable = false;
+    this->interface->mserial->printStrln("AHT sensor not found at specified address (0x"+String(this->AHT20_ADDRESS, HEX)+")");
+    this->interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
+    this->interface->onBoardLED->statusLED(100,2); 
+    return false;
+  }
 }
 
 // *************************************************
@@ -77,16 +79,16 @@ void AHT20_SENSOR::startAHT() {
 
     if (isnan(aht_temp)) { // check if 'is not a number'
       this->interface->mserial->printStrln("Failed to read temperature");
-      this->measurement[0] = -500;
+      this->measurement[1] = -500;
     }else{
-      this->measurement[0] = aht_temp;
+      this->measurement[1] = aht_temp;
     }
 
     if (isnan(aht_humidity)) { // check if 'is not a number'
       this->interface->mserial->printStrln("Failed to read humidity");
-      this->measurement[1] = -500;
+      this->measurement[0] = -500;
     }else{
-      this->measurement[1] = aht_humidity;
+      this->measurement[0] = aht_humidity;
     }
 
     return true;
