@@ -82,28 +82,35 @@ bool FILE_CLASS::init(fs::LittleFSFS &fs, String partitionName, uint8_t maxFiles
     }
 
     this->mserial->printStrln("Total space: " + addThousandSeparators( std::string( String(fs.totalBytes() ).c_str() ) ) + " bytes");
-    this->mserial->printStrln("used space: " + addThousandSeparators( std::string( String(fs.usedBytes() ).c_str() ) )  + " bytes\n" );
+    this->mserial->printStrln("Used space : " + addThousandSeparators( std::string( String(fs.usedBytes() ).c_str() ) )  + " bytes\n" );
     return true;
 }
 
 // ************************************************************
 void FILE_CLASS::partition_info(){
     this->mserial->printStrln("\n================= Storage Partition list =================", mSerial::DEBUG_TYPE_VERBOSE, mSerial::DEBUG_ALL_USB_UART_BLE);
+    
+    String dataStr = this->mserial->padString("Partition addr", 17);
+    dataStr       += this->mserial->padString("Size (bytes)", 19);
+    dataStr       += "Label";
+    this->mserial->printStrln(dataStr, mSerial::DEBUG_TYPE_VERBOSE, mSerial::DEBUG_ALL_USB_UART_BLE);
+
     partloop(ESP_PARTITION_TYPE_DATA);
     partloop(ESP_PARTITION_TYPE_APP);
-    this->mserial->printStrln("=================    =================", mSerial::DEBUG_TYPE_VERBOSE, mSerial::DEBUG_ALL_USB_UART_BLE);
+    this->mserial->printStrln("=============================    ===========================", mSerial::DEBUG_TYPE_VERBOSE, mSerial::DEBUG_ALL_USB_UART_BLE);
 }
 
 void FILE_CLASS::partloop(esp_partition_type_t part_type) {
   esp_partition_iterator_t iterator = NULL;
   const esp_partition_t *next_partition = NULL;
   iterator = esp_partition_find(part_type, ESP_PARTITION_SUBTYPE_ANY, NULL);
+
   while (iterator) {
      next_partition = esp_partition_get(iterator);
      if (next_partition != NULL) {
-      String dataStr = this->mserial->padString("partition addr: 0x" +String(next_partition->address, HEX), 25) + "  ";
-      dataStr += "size: " + this->mserial->padString( addThousandSeparators( std::string( String(next_partition->size, DEC).c_str() ) )  + " bytes", 16) + "   ";
-      dataStr += "label: " + this->mserial->padString( String(next_partition->label), 8) ;  
+      String dataStr  = this->mserial->padString("0x" +String(next_partition->address, HEX), 15) + "  ";
+      dataStr += this->mserial->padString( addThousandSeparators( std::string( String(next_partition->size, DEC).c_str() ) ), 16) + "   ";
+      dataStr += this->mserial->padString( String(next_partition->label), 8) ;  
       this->mserial->printStrln(dataStr, mSerial::DEBUG_TYPE_VERBOSE, mSerial::DEBUG_ALL_USB_UART_BLE);
       iterator = esp_partition_next(iterator);
     }

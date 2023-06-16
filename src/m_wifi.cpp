@@ -175,13 +175,14 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
   int cnt = 0;        
   uint8_t statusWIFI=WL_DISCONNECTED;
   
-  this->interface->mserial->printStr("Connecting ( "+ String(cnt+1) + ") : ");
+  this->interface->mserial->printStr("Connecting ("+ String(cnt+1) + ") : ");
   while (statusWIFI != WL_CONNECTED) {
     // Connect to Wi-Fi using wifiMulti (connects to the SSID with strongest connection)
     this->interface->mserial->printStr( "# " );
     if(this->wifiMulti->run(this->connectionTimeout) == WL_CONNECTED) {        
-      this->interface->mserial->printStrln( "\n\nConnection Details");
-      this->interface->mserial->printStrln( "   Network : " + String( WiFi.SSID() ) + " (" + String( RSSIToPercent(WiFi.RSSI() ) ) + "% )" );
+      this->interface->mserial->printStrln(" >> OK."); 
+      this->interface->mserial->printStrln( "Connection Details");
+      this->interface->mserial->printStrln( "   Network : " + String( WiFi.SSID() ) + " (" + String( this->RSSIToPercent(WiFi.RSSI() ) ) + "%)" );
       this->interface->mserial->printStrln( "        IP : "+WiFi.localIP().toString());
       this->interface->mserial->printStrln( "   Gateway : "+WiFi.gatewayIP().toString());
 
@@ -319,10 +320,10 @@ void M_WIFI_CLASS::WIFIscanNetworks(bool override){
     dataStr = "\n=====    " + String(n) + " WiFi networks nearby =============\n";
     for (int i = 0; i < n; ++i) {
       // Print SSID and RSSI for each network found
-      dataStr += this->interface->mserial->padString( String(i + 1), 4)+ ": ";
+      dataStr += this->interface->mserial->padString( String(i + 1), 3)+ ": ";
       dataStr += this->interface->mserial->padString( String(WiFi.SSID(i)), 33);
       dataStr += " RSSI:" + this->interface->mserial->padString( String(WiFi.RSSI(i)), 4) + "db (";
-      dataStr +=  this->interface->mserial->padString( String( RSSIToPercent(WiFi.RSSI() ) ), 4) + "%)";
+      dataStr +=  this->interface->mserial->padString( String( this->RSSIToPercent(WiFi.RSSI(i) ) ), 3) + "%)";
       dataStr += (WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? " pwd: no\n" : " pwd: yes\n";
     }
     dataStr += "===============================\n";
@@ -562,7 +563,7 @@ void M_WIFI_CLASS::updateInternetTime(){
     return;
   }else{
     this->interface->mserial->printStr("Internet Time is: ");
-    this->interface->mserial->printStr( String(this->interface->timeinfo.tm_mday) + "," + String( this->months[this->interface->timeinfo.tm_mon] ) + " " + String( this->interface->timeinfo.tm_mday ) + " " + String( 1900 + this->interface->timeinfo.tm_year ) + " "  );
+    this->interface->mserial->printStr( String(this->weekDays[this->interface->timeinfo.tm_wday]) + ", " + String( this->months[this->interface->timeinfo.tm_mon] ) + " " + String( this->interface->timeinfo.tm_mday ) + " " + String( 1900 + this->interface->timeinfo.tm_year ) + " "  );
     this->interface->mserial->printStrln( String( this->interface->timeinfo.tm_hour ) + ":" + String( this->interface->timeinfo.tm_min ) + ":" + String( this->interface->timeinfo.tm_sec ) );
 
     this->interface->rtc.setTimeStruct(this->interface->timeinfo); 
@@ -570,7 +571,7 @@ void M_WIFI_CLASS::updateInternetTime(){
     //this->interface->rtc.setTime(this->interface->timeinfo.tm_hour, this->interface->timeinfo.tm_min, this->interface->timeinfo.tm_sec,
     //                              this->interface->timeinfo.tm_mday, this->interface->timeinfo.tm_mon,this->interface->timeinfo.tm_year); 
 
-    this->interface->mserial->printStrln("Local Time is : " + String(this->interface->rtc.getDateTime(true)) +"\n");
+    this->interface->mserial->printStrln("Local Time is   : " + String(this->interface->rtc.getDateTime(true)) +"\n");
   }
 }
 
@@ -767,9 +768,13 @@ bool M_WIFI_CLASS::get_ip_geo_location_data(String ipAddress , bool override ){
 // *************************************************
 
 uint8_t M_WIFI_CLASS::RSSIToPercent(long rssi) {
-  if (rssi >= -50) return 100;
-  else if (rssi <= -100) return 0;
-  else return (rssi + 100) * 2;
+  if (rssi >= -50) {
+    return 100;
+  }else if (rssi <= -100){
+    return 0;
+  }else{
+     return (rssi + 100) * 2;
+  }
   // ▂▄▆█
 }
 // ********************************************************

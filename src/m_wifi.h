@@ -106,6 +106,8 @@ class M_WIFI_CLASS {
     config_strut config;
     long NTP_last_request;
     
+    String test;
+    
     int HTTP_TTL; // 20 sec TTL
     WiFiClientSecure client;
 
@@ -125,8 +127,8 @@ class M_WIFI_CLASS {
     String requestGeoLocationDateTime;
     StaticJsonDocument <512> geoLocationInfoJson;
 
-    const char* months[12] {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-
+    const char* months[12] {"January", "February", "March", "April", "May", "June", "July", "August", "Septemper", "October", "Novembre", "December"};
+    const char* weekDays[7] {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 M_WIFI_CLASS();
 
 void init(INTERFACE_CLASS* interface, FILE_CLASS* drive,  ONBOARD_LED_CLASS* onboardLED);
