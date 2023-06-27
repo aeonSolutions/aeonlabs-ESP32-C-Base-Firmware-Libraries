@@ -170,16 +170,17 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
     return false;
   }
   
- 
-  int WiFi_prev_state=-10;
-  int cnt = 0;        
+   int cnt = 0;        
   uint8_t statusWIFI=WL_DISCONNECTED;
   
-  this->interface->mserial->printStr("Connecting ("+ String(cnt+1) + ") : ");
+  this->interface->mserial->printStr("Connecting ("+ String(this->getNumberWIFIconfigured() ) + ") : ");
   while (statusWIFI != WL_CONNECTED) {
     // Connect to Wi-Fi using wifiMulti (connects to the SSID with strongest connection)
-    this->interface->mserial->printStr( "# " );
-    if(this->wifiMulti->run(this->connectionTimeout) == WL_CONNECTED) {        
+    this->interface->mserial->printStr( "#" );
+    int result = this->wifiMulti->run(this->connectionTimeout) ;
+    this->interface->mserial->printStr( "< " );
+
+    if( result == WL_CONNECTED) {        
       this->interface->mserial->printStrln(" >> OK."); 
       this->interface->mserial->printStrln( "Connection Details");
       this->interface->mserial->printStrln( "   Network : " + String( WiFi.SSID() ) + " (" + String( this->RSSIToPercent(WiFi.RSSI() ) ) + "%)" );
@@ -194,6 +195,7 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
         this->updateInternetTime();
         this->get_ip_geo_location_data();
       }
+
       return true;
     }
     
@@ -309,12 +311,14 @@ void M_WIFI_CLASS::WIFIscanNetworks(bool override){
     return;
   
   WiFi.mode(WIFI_STA);
+  delay(200);
   WiFi.disconnect();
+  delay(500);
   int n = WiFi.scanNetworks();
-  
   String dataStr = "";
-
-  if (n == 0) {
+  if(n == WIFI_SCAN_FAILED){ 
+     this->interface->mserial->printStrln("Wifi Scan Failed");
+  }else if (n == 0) {
     this->interface->sendBLEstring( "no nearby WIFI networks found\n", mSerial::DEBUG_ALL_USB_UART_BLE);
   } else {
     dataStr = "\n=====    " + String(n) + " WiFi networks nearby =============\n";

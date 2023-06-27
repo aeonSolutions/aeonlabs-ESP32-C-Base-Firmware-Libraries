@@ -53,7 +53,7 @@ void SHT3X_SENSOR::init(INTERFACE_CLASS* interface, uint8_t SHT3X_ADDRESS){
 
 // ********************************************************
 bool SHT3X_SENSOR::startSHT3X() {
-    bool result = this->sht3x->begin();  
+    bool result = this->sht3x->begin(this->interface->I2C_SDA_IO_PIN , this->interface->I2C_SCL_IO_PIN );  
     if (result){
         this->sensorAvailable = true;
         this->interface->mserial->printStrln(" status code: " + String(this->sht3x->readStatus()));

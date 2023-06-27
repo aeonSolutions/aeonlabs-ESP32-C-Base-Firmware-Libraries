@@ -36,13 +36,13 @@
 #define SHA204_GEN_FAIL             ((uint8_t)  0xE1) //!< unspecified error
 #define SHA204_BAD_PARAM            ((uint8_t)  0xE2) //!< bad argument (out of range, null pointer, etc.)
 #define SHA204_INVALID_ID           ((uint8_t)  0xE3) //!< invalid device id, id not set
-#define SHA204_INVALID_SIZE         ((uint8_t)  0xE4) //!< Count value is out of range or greater than buffer size.
+#define SHA204_INVALID_SIZE         ((uint8_t)  0xE4) //!< 228 - Count value is out of range or greater than buffer size.
 #define SHA204_BAD_CRC              ((uint8_t)  0xE5) //!< incorrect CRC received
 #define SHA204_RX_FAIL              ((uint8_t)  0xE6) //!< Timed out while waiting for response. Number of bytes received is > 0.
 #define SHA204_RX_NO_RESPONSE       ((uint8_t)  0xE7) //!< Not an error while the Command layer is polling for a command response.
 #define SHA204_RESYNC_WITH_WAKEUP   ((uint8_t)  0xE8) //!< re-synchronization succeeded, but only after generating a Wake-up
 
 #define SHA204_COMM_FAIL            ((uint8_t)  0xF0) //!< Communication with device failed. Same as in hardware dependent modules.
-#define SHA204_TIMEOUT              ((uint8_t)  0xF1) //!< Timed out while waiting for response. Number of bytes received is 0.
+#define SHA204_TIMEOUT              ((uint8_t)  0xF1) //!< 241 - Timed out while waiting for response. Number of bytes received is 0.
 
 #endif

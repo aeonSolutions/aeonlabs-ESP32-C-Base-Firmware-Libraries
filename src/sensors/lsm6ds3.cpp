@@ -69,12 +69,14 @@ bool LSM3DS6_SENSOR::startLSM6DS3() {
 
 // *************************************************
  bool LSM3DS6_SENSOR::requestMeasurements(){
-    if (this->sensorAvailable == false) {
-      this->startLSM6DS3(); 
-      if (this->sensorAvailable == false) 
-        return false;
-    }  
-    
+  /*
+  if (this->sensorAvailable == false) {
+    this->startLSM6DS3(); 
+    */
+    if (this->sensorAvailable == false) 
+      return false;
+  
+
   this->measurement[0] = this->lsm6ds3->readFloatAccelX();
   this->measurement[1] = this->lsm6ds3->readFloatAccelY();
   this->measurement[2] = this->lsm6ds3->readFloatAccelZ();

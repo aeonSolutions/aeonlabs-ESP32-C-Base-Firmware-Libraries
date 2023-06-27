@@ -88,6 +88,9 @@ void mSerial::printStr(String str, uint8_t debugType, uint8_t DEBUG_TO ) {
 
 // ----------------------------------------------------------
   void mSerial::log( String str, uint8_t debugType, uint8_t debugTo ){
+    if ( this->DEBUG_EN == false )
+      return;
+      
     // String mem = "RAM: " + addThousandSeparators( std::string( String(esp_get_free_heap_size() ).c_str() ) )  + " b >> ";
     String mem ="";
     if ( debugTo == this->DEBUG_NONE )

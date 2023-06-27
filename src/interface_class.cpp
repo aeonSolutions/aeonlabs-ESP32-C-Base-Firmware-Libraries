@@ -67,14 +67,15 @@ INTERFACE_CLASS::INTERFACE_CLASS(){
 void INTERFACE_CLASS::init( mSerial* mserial, bool DEBUG_ENABLE) {  
   this->mserial=mserial;
   this->mserial->DEBUG_EN=DEBUG_ENABLE;
+  this->onBoardLED = new ONBOARD_LED_CLASS();
+  this->onBoardLED->init();
 
   this->BL = Pangodream_18650_CL( this->BATTERY_ADC_IO, 1.7, 20);
 
   this->loadDefaultLanguagePack( );
 
-  Wire.begin(this->I2C_SDA_IO_PIN, this->I2C_SCL_IO_PIN);
-  this->wirePort = &Wire;
-
+  //Wire.begin(this->I2C_SDA_IO_PIN, this->I2C_SCL_IO_PIN);
+  
   this->mserial->printStrln ("Firmware Build: " + String(__DATE__ ) + " " + String(__TIME__) + " version: " + this->firmware_version + "\n");
   //this->rtc.setTime(1609459200);  // 1st Jan 2021 00:00:00
   this->rtc.offset = this->config.gmtOffset_sec; // change offset value
@@ -138,7 +139,7 @@ void INTERFACE_CLASS::settings_defaults(){
         this->UARTserial->print("The current Serial Baud speed on the UART Port is ");
         this->UARTserial->println(this->MCU_FREQUENCY_SERIAL_SPEED);
 
-      this->mserial->printStrln("Setting MCU Freq to  " + String(getCpuFrequencyMhz()) + "MHz" );
+      this->mserial->printStrln("Setting MCU Freq to " + String(getCpuFrequencyMhz()) + "MHz" );
       this->McuFrequencyBusy = false;
     xSemaphoreGive(this->McuFreqSemaphore);
     return true;
@@ -240,27 +241,24 @@ bool INTERFACE_CLASS::saveSettings(fs::FS &fs){
 
 // ********************************************************************************
 bool INTERFACE_CLASS::loadSettings(fs::FS &fs){
-  this->mserial->printStr("Loading the Smart Device settings...");
-  
+
   File settingsFile = fs.open("/settings.cfg", FILE_READ);
   if (!settingsFile){
-    this->mserial->printStrln("not found.");
+    this->mserial->printStrln("Smart Device settings not found.");
     settingsFile.close();
     return false;
   }
   if (settingsFile.size() == 0){
-    this->mserial->printStrln("Invalid file");
+    this->mserial->printStrln("Invalid Smart Device settings");
     settingsFile.close();
     return false;    
   }
-
+  this->mserial->printStr("Loading the Smart Device settings...");
   File settingsFile2 = fs.open("/settings.cfg", FILE_READ);
  // Serial.println("full contents:");
  // Serial.println( settingsFile2.readString() );
  // Serial.println(" === END ===== ");
         
-this->mserial->printStrln("done. Size: " + String( settingsFile.size()) );
-
     this->config.gmtOffset_sec = atol(settingsFile.readStringUntil( ';' ).c_str() ); 
 
     String temp = settingsFile.readStringUntil(';');
@@ -318,6 +316,8 @@ this->mserial->printStrln("done. Size: " + String( settingsFile.size()) );
     this->loadDeviceLanguagePack( this->config.language,  mSerial::DEBUG_ALL_USB_UART_BLE );
   
   }
+
+  this->mserial->printStrln("done. Size: " + String( settingsFile.size()) );
   return true;
 }
 // *************************************************************

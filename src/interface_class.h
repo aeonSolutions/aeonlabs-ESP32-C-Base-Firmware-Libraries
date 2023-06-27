@@ -35,7 +35,6 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 #include "Arduino.h"
 #include <math.h>
 #include  "BLECharacteristic.h"
-#include "time.h"
 #include "ESP32Time.h"
 #include "FS.h"
 #include <LittleFS.h>

@@ -37,9 +37,11 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 #include "interface_class.h"
 #include <Wire.h>
 #include <driver/i2c.h>
+#include "m_atsha204.h"
 
-//#include "src/sensors/aht20.h"
-#include "sensors/sht3x.h"
+
+#include "sensors/aht20.h"
+//#include "sensors/sht3x.h"
 
 #include "sensors/lsm6ds3.h"
 
@@ -58,8 +60,10 @@ class ONBOARD_SENSORS {
     float ONBOARD_TEMP, ONBOARD_HUMIDITY;
     uint8_t HT_SENSOR_ADDRESS;
     
-    //AHT20_SENSOR* onboardTHsensor;
-    SHT3X_SENSOR* onboardTHsensor;
+    AHT20_SENSOR* onboardTHsensor;
+    //SHT3X_SENSOR* onboardTHsensor;
+
+
     LSM3DS6_SENSOR* onboardMotionSensor;
 
     // LSM6DS3 motion sensor  ******************************
@@ -80,6 +84,7 @@ class ONBOARD_SENSORS {
     ONBOARD_SENSORS();
     void I2Cscanner();
     void init(INTERFACE_CLASS* interface, mSerial* mserial);
+    bool initOnboardSensors();
 
     void startLSM6DS3();
     void request_onBoard_Sensor_Measurements();

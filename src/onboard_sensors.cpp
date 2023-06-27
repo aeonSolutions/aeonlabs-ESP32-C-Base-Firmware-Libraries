@@ -44,7 +44,7 @@ ONBOARD_SENSORS::ONBOARD_SENSORS(){
 
 void ONBOARD_SENSORS::init(INTERFACE_CLASS* interface, mSerial* mserial){
     this->mserial=mserial;
-    this->mserial->printStrln("\n==============   Init onboard sensors   =======================");
+    this->mserial->printStr("\n Init I2C bus...");
     
     this->interface=interface;
     this->i2c_err_t[0]="I2C_ERROR_OK";
@@ -56,18 +56,7 @@ void ONBOARD_SENSORS::init(INTERFACE_CLASS* interface, mSerial* mserial){
     this->i2c_err_t[6]="I2C_ERROR_MEMORY";  // 6
     this->i2c_err_t[7]="I2C_ERROR_CONTINUE";// 7
     this->i2c_err_t[8]="I2C_ERROR_NO_BEGIN"; // 8
-
-    this->onboardTHsensor = new SHT3X_SENSOR();
-    this->onboardTHsensor->init(this->interface, this->HT_SENSOR_ADDRESS);
     
-    if ( this->onboardTHsensor->startSHT3X() )
-      this->NUMBER_OF_ONBOARD_SENSORS=this->NUMBER_OF_ONBOARD_SENSORS + this->onboardTHsensor->numSensors;
-
-    this->onboardMotionSensor = new LSM3DS6_SENSOR();
-    this->onboardMotionSensor->init(this->interface );
-    if ( this->onboardMotionSensor->startLSM6DS3() )
-      this->NUMBER_OF_ONBOARD_SENSORS=this->NUMBER_OF_ONBOARD_SENSORS + this->onboardMotionSensor->numSensors;
-
     this->prevReadings[0] = 0.0;
     this->prevReadings[1] = 0.0;
     this->prevReadings[2] = 0.0;
@@ -79,7 +68,30 @@ void ONBOARD_SENSORS::init(INTERFACE_CLASS* interface, mSerial* mserial){
     this->numtimesMotionDetected=0;
 
     time(&this->$espunixtimePrev);
-    this->mserial->printStrln("==================  done   ==================================");
+    this->mserial->printStrln("done.");
+}
+// **********************************************************
+bool ONBOARD_SENSORS::initOnboardSensors(){
+  this->mserial->printStrln("\n==============   Init onboard sensors   =======================");
+
+  this->onboardTHsensor = new AHT20_SENSOR();
+  this->onboardTHsensor->init(this->interface, this->HT_SENSOR_ADDRESS);
+  if ( this->onboardTHsensor->startAHT() )
+    this->NUMBER_OF_ONBOARD_SENSORS=this->NUMBER_OF_ONBOARD_SENSORS + this->onboardTHsensor->numSensors;
+    /*
+    this->onboardTHsensor = new SHT3X_SENSOR();
+    this->onboardTHsensor->init(this->interface, this->HT_SENSOR_ADDRESS);
+    if ( this->onboardTHsensor->startSHT3X() )
+      this->NUMBER_OF_ONBOARD_SENSORS=this->NUMBER_OF_ONBOARD_SENSORS + this->onboardTHsensor->numSensors;
+    */
+    
+  this->onboardMotionSensor = new LSM3DS6_SENSOR();
+  this->onboardMotionSensor->init(this->interface );
+  if ( this->onboardMotionSensor->startLSM6DS3() )
+      this->NUMBER_OF_ONBOARD_SENSORS=this->NUMBER_OF_ONBOARD_SENSORS + this->onboardMotionSensor->numSensors;
+    
+  this->mserial->printStrln("==================  done   ==================================");
+  return true;
 }
 
 // ***************************************************************
@@ -144,7 +156,7 @@ void ONBOARD_SENSORS::initRollTheshold(){
       X += this->onboardMotionSensor->measurement[0]; 
       Y += this->onboardMotionSensor->measurement[1];
       Z += this->onboardMotionSensor->measurement[2];
-      delay(200);
+      delay(100);
     }
     X /= 10;
     Y /= 10;
@@ -193,44 +205,35 @@ bool ONBOARD_SENSORS::motionDetect(){
 
 void ONBOARD_SENSORS::I2Cscanner() {
     this->interface->mserial->printStrln("\nScanning I2C Bus (SDA IO:"+ String( interface->I2C_SDA_IO_PIN ) +" SCL IO:" + String( interface->I2C_SCL_IO_PIN ) + ")   ============");
-    i2c_config_t conf;
-    conf.mode = I2C_MODE_MASTER;
-    conf.sda_io_num = interface->I2C_SDA_IO_PIN;
-    conf.scl_io_num = interface->I2C_SCL_IO_PIN;
-    conf.sda_pullup_en = false;
-    conf.scl_pullup_en = false;
-    conf.master.clk_speed = 400000;
-    i2c_param_config(I2C_NUM_0, &conf);
-
-    i2c_driver_install(I2C_NUM_0, I2C_MODE_MASTER, 0, 0, 0);
+    
+    char buffer[3];
     uint8_t count = 0;
     esp_err_t res;
-    printf("     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f\n");
-    printf("00:         ");
-    for (uint8_t i = 3; i < 0x78; i++)
-    {
+    
+    this->interface->mserial->printStrln("       0     1     2     3     4     5     6     7     8     9     a     b     c     d     e     f\n");
+    this->interface->mserial->printStr( this->interface->mserial->padString( "00:", 6) );
+    
+    for (uint8_t i = 3; i < 0x78; i++){
         i2c_cmd_handle_t cmd = i2c_cmd_link_create();
         i2c_master_start(cmd);
         i2c_master_write_byte(cmd, (i << 1) | I2C_MASTER_WRITE, 1 /* expect ack */);
         i2c_master_stop(cmd);
 
         res = i2c_master_cmd_begin(I2C_NUM_0, cmd, 10 / portTICK_PERIOD_MS);
+        snprintf(buffer, sizeof(buffer), "%02X", i);
         if (i % 16 == 0){
-            printf("\n%.2x:", i);
+          this->interface->mserial->printStr( "\n" + this->interface->mserial->padString( String(buffer) + ":", 6 ) );
         }
+
         if (res == 0){
-            printf(" %.2x", i);
-            count++;
+          this->interface->mserial->printStr( " [" + String(buffer) + "] " );
+          count++;
         }else{
-            printf(" --");
+          this->interface->mserial->printStr( this->interface->mserial->padString( " E" + String(res)+" ", 6) );
         }
         i2c_cmd_link_delete(cmd);
     }
-    printf("\n");
-
-  this->interface->mserial->printStr ("Found ");
-  this->interface->mserial->printStr (String(count));        // numbers of devices
-  this->interface->mserial->printStrln (" device(s).");
+  this->interface->mserial->printStrln("\nFound " + String(count) + " device(s)." );
   if (count == 0) {
       interface->onBoardLED->led[1] = interface->onBoardLED->LED_RED;
       interface->onBoardLED->statusLED(100,2); 
