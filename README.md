@@ -32,6 +32,7 @@ Currently it uncludes:
    - SHT3x Temperature & Humidity sensor
    - Built-in Ohmmeter
    - VL6180x Laser sensor
+   - LSM6DS3 motion sensor
 - Onboard sensors 
    - AHT2x/ SHT3x Temperature & Humidty sensor
    - LSM6DS3 motion sensor
