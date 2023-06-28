@@ -26,26 +26,31 @@ String CryptoICserialNumber(INTERFACE_CLASS* interface){
 
 //******************************************************************************
 String macChallengeDataAuthenticity(INTERFACE_CLASS* interface, String text ){
+  static uint32_t n = 0;
+  uint8_t command[MAC_COUNT_LONG];
+  uint8_t response[MAC_RSP_SIZE];
+
   int str_len = text.length() + 1;
   char text_char [str_len];
   text.toCharArray(text_char, str_len);
         
-  static uint32_t n = 0;
-  uint8_t mac[32];
   uint8_t challenge[sizeof(text_char)] = {0};
 
   sprintf((char *)challenge, text_char, n++);
 
   interface->sha204.simpleWakeup();
-  uint8_t ret_code = interface->sha204.simpleMac(challenge, mac);
-  interface->sha204.simpleSleep();  
+  uint8_t ret_code = interface->sha204.sha204m_execute(SHA204_MAC, 0, 0, MAC_CHALLENGE_SIZE, 
+    (uint8_t *) challenge, 0, NULL, 0, NULL, sizeof(command), &command[0], 
+    sizeof(response), &response[0]);
   
+  interface->sha204.simpleSleep(); 
+
   if (ret_code != SHA204_SUCCESS){
     interface->mserial->printStrln("simpleMac failed.");
     return "Error";
   }
 
-  return hexDump(mac, sizeof(mac));
+  return hexDump(response, sizeof(response));
 }
 
 //***********************************************************************************
@@ -221,7 +226,7 @@ String ErrorCodeMessage(uint8_t code){
       return "re-synchronization succeeded, but only after generating a Wake-up";
       break;
     case 0xF0:
-      return "Communication with device failed. Same as in hardware dependent modules.";
+      return "Communication with device failed.";
       break;
     case 0xF1:
       return "Timed out while waiting for response. Number of bytes received is 0.";

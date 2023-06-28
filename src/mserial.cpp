@@ -138,7 +138,12 @@ bool mSerial::readSerialData(){
       char inChar = Serial.read();
       if (  (10 != (int)inChar) && (13 != (int)inChar) )
       {
-        this->serialDataReceived += String(inChar);
+        String str =  String(inChar);
+        if (str != NULL){
+          this->serialDataReceived += str;
+        }else{
+          this->printStr("E");      
+        }
       }
     }
     this->printStr(">");
@@ -159,7 +164,12 @@ bool mSerial::readUARTserialData(){
       char inChar = UARTserial->read();
       if (  (10 != (int)inChar) && (13 != (int)inChar) )
       {
-        this->serialUartDataReceived += String(inChar);
+        String str =  String(inChar);
+        if (str != NULL){
+          this->serialUartDataReceived += str;
+        }else{
+          this->printStr("E");      
+        }
       }
     }
     this->printStr(">");
@@ -171,12 +181,12 @@ bool mSerial::readUARTserialData(){
 
   // --------------------------------------------------------------------------
 bool mSerial::reinitialize_log_file(fs::FS &fs){
-    if (fs.exists( "/" +  this->LogFilename ) ){
-        if( fs.remove( "/" +  this->LogFilename ) !=true ){
-            this->printStrln("Error removing old log file");
-            return false;
-        }  
-    }
+  if (fs.exists( "/" +  this->LogFilename ) ){
+    if( fs.remove( "/" +  this->LogFilename ) !=true ){
+      this->printStrln("Error removing old log file");
+      return false;
+    }  
+  }
 }
 
 // --------------------------------------------------------
@@ -238,3 +248,4 @@ String mSerial::padString(String str, int size){
   }
 return str;
 }
+

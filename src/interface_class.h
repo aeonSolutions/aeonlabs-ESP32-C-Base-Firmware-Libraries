@@ -90,6 +90,8 @@ class INTERFACE_CLASS {
       String DEVICE_BLE_NAME;
 
       String language;
+
+      float BOARD_VDD;
       
     } config_strut;
 

@@ -48,6 +48,9 @@ M_WIFI_CLASS::M_WIFI_CLASS(){
   this->MemLockSemaphoreWIFI = xSemaphoreCreateMutex();
   this->WIFIconnected=false;
   this->BLE_IS_DEVICE_CONNECTED=false;
+  this->InternetIPaddress = "";
+  this->requestGeoLocationDateTime = "";
+  
 }
 
 
@@ -87,7 +90,7 @@ void M_WIFI_CLASS::settings_defaults(){
   this->config.isWIFIenabled=false;
    
   this->BLE_IS_DEVICE_CONNECTED=false;
-  this->config.DEVICE_BLE_NAME="AeonHome 12A";
+  this->config.DEVICE_BLE_NAME="Smart DAQ 12A";
   this->forceFirmwareUpdate=false;
   this->config.ntpServer = "pool.ntp.org";
 

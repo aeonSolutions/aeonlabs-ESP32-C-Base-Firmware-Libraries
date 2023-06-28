@@ -73,7 +73,10 @@ void GBRL::init(INTERFACE_CLASS* interface, M_WIFI_CLASS* mWifi){
                     "$debug errors [on/off]             - Output only Error messages\n" \
                     "\n" \
                     "$lang dw [country code]            - Download a language pack to the smart device (requires internet conn.)\n" \
-                    "$lang set [country code]           - Change the smart device language\n\n";
+                    "$lang set [country code]           - Change the smart device language\n" \
+                    "\n" \
+                    "$vdd view                          - View Defined channel(s) Output Voltage (V) \n\n";
+                    "$vdd [value]                       - Define channel(s) Output Voltage (V) \n\n";
 
     this->interface->sendBLEstring( dataStr,  sendTo ); 
     return false; 
@@ -82,6 +85,29 @@ void GBRL::init(INTERFACE_CLASS* interface, M_WIFI_CLASS* mWifi){
 
 bool GBRL::commands(String $BLE_CMD, uint8_t sendTo ){
   String dataStr="";
+
+  if($BLE_CMD.equals("$vdd view") ){
+    dataStr = "The defined channel output voltage is " + String (this->interface->config.BOARD_VDD);
+    this->interface->sendBLEstring( dataStr,  sendTo ); 
+    return true;
+  }
+
+  if($BLE_CMD.indexOf("$vdd ")>-1){
+    String value= $BLE_CMD.substring(5, $BLE_CMD.length());
+    if (isNumeric(value)){
+      this->interface->config.BOARD_VDD = atof(value.c_str() );
+      dataStr = "The new channel output voltage is " + String (this->interface->config.BOARD_VDD);    
+      this->interface->sendBLEstring( dataStr,  sendTo );
+      this->interface->saveSettings(); 
+      return true;
+    }else{
+      dataStr = "Invalid value.";
+      this->interface->sendBLEstring( dataStr,  sendTo ); 
+      return false;
+    }
+  }  
+
+
   if($BLE_CMD.indexOf("$lang dw ")>-1){
     return this->set_device_language($BLE_CMD, sendTo);
   }
