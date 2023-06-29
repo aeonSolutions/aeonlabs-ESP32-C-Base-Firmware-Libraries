@@ -70,7 +70,7 @@ boolean isNumeric(String str) {
 // --------------------------------------------------------
 
 String hexDump(uint8_t *data, uint32_t length){
-  char buffer[3];
+  char buffer[3] = {' ',' ',' '};
   String hexStr="0x";
   for (uint32_t i = 0; i < length; i++){    
     snprintf(buffer, sizeof(buffer), "%02X", data[i]);

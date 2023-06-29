@@ -35,7 +35,10 @@ String macChallengeDataAuthenticity(INTERFACE_CLASS* interface, String text ){
   text.toCharArray(text_char, str_len);
         
   uint8_t challenge[sizeof(text_char)] = {0};
-
+  for (uint32_t i = 0; i < sizeof(challenge); i++){    
+    challenge[i] = ' ';
+  }
+  
   sprintf((char *)challenge, text_char, n++);
 
   interface->sha204.simpleWakeup();
@@ -46,8 +49,7 @@ String macChallengeDataAuthenticity(INTERFACE_CLASS* interface, String text ){
   interface->sha204.simpleSleep(); 
 
   if (ret_code != SHA204_SUCCESS){
-    interface->mserial->printStrln("simpleMac failed.");
-    return "Error";
+    return "SimpleMac failed";
   }
 
   return hexDump(response, sizeof(response));
@@ -56,26 +58,32 @@ String macChallengeDataAuthenticity(INTERFACE_CLASS* interface, String text ){
 //***********************************************************************************
 String macChallengeDataAuthenticityOffLine(INTERFACE_CLASS* interface, char dataRow[] ){
   static uint32_t n = 0;
-  uint8_t mac[32];
+
   uint8_t challenge[sizeof(dataRow)] = {0}; // MAC_CHALLENGE_SIZE
-  
-  sprintf((char *)challenge, dataRow, n++);
-  interface->mserial->printStr("challenge: ");
-  interface->mserial->printStrln((char *)challenge);
-  
   uint8_t key[32];
+
   //Change your key here.
   hex2bin(interface->DATA_VALIDATION_KEY, key);
-  uint8_t mac_offline[32];
+  uint8_t mac_offline[MAC_RSP_SIZE];
+  for (uint32_t i = 0; i < sizeof(mac_offline); i++){    
+    mac_offline[i] = ' ';
+  }
   interface->sha204.simpleWakeup();
   int ret_code = interface->sha204.simpleMacOffline(challenge, mac_offline, key);
   interface->sha204.simpleSleep();
-  interface->mserial->printStr("MAC Offline:\n");
-  return hexDump(mac_offline, sizeof(mac_offline));
+  
+  char buffer[3] = {' ',' ',' '};
+  String hexStr="";
+  for (uint32_t i = 0; i < sizeof(mac_offline); i++){    
+    snprintf(buffer, sizeof(buffer), "%02X", mac_offline[i]);
+
+    hexStr += String(buffer) + " ";
+  }
+  return hexStr;
 }
 
 //*********************************************************************
-byte macChallengeExample(INTERFACE_CLASS* interface){
+uint8_t macChallengeExample(INTERFACE_CLASS* interface){
   uint8_t command[MAC_COUNT_LONG];
   uint8_t response[MAC_RSP_SIZE];
   char buffer[3];
@@ -98,7 +106,6 @@ byte macChallengeExample(INTERFACE_CLASS* interface){
   }
   
   interface->mserial->printStrln("\n Response Code (" + String(ret_code) + ") " + ErrorCodeMessage(ret_code) );
-
   return ret_code;
 }
 
@@ -165,12 +172,15 @@ void runFingerPrintIDtests(INTERFACE_CLASS* interface){
     randomExample(interface);
 
     interface->mserial->printStrln("\nSending a MAC Challenge. Response should be:");
-    interface->mserial->printStrln("23 06 67 00 4F 28 4D 6E 98 62 04 F4 60 A3 E8 75 8A 59 85 A6 79 96 C4 8A 88 46 43 4E B3 DB 58 A4 FB E5 73");
+    String challenge = "23 06 67 00 4F 28 4D 6E 98 62 04 F4 60 A3 E8 75 8A 59 85 A6 79 96 C4 8A 88 46 43 4E B3 DB 58 A4 FB E5 73";
+    interface->mserial->printStrln(challenge);
     interface->mserial->printStrln("Response is:");
     if (macChallengeExample(interface) == 0x00 ){
       interface->onBoardLED->led[0] = interface->onBoardLED->LED_GREEN;
       interface->onBoardLED->statusLED(100, 1);
     }else{
+      interface->mserial->printStrln("Try again. Offline response is: ");
+      interface->mserial->printStrln(  macChallengeDataAuthenticityOffLine(interface, (char*) challenge.c_str() ) );
       interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
       interface->onBoardLED->statusLED(100, 2);
     }

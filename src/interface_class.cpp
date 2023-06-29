@@ -43,6 +43,7 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 
 INTERFACE_CLASS::INTERFACE_CLASS(){
   this->firmware_version="-.-.-";
+  this->DATA_VALIDATION_KEY = "A9CD7F1B6688159B54BBE862F638FF9D29E0FA5F87C69D27BFCD007814BA69C9";
   
   // ___________ MCU freq ____________________
   this->SAMPLING_FREQUENCY = 80; 

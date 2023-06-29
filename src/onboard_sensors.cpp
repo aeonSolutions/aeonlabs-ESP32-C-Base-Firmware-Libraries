@@ -208,9 +208,10 @@ void ONBOARD_SENSORS::I2Cscanner() {
     
     char buffer[3];
     uint8_t count = 0;
+    uint8_t count2 = 0;
     esp_err_t res;
     
-    this->interface->mserial->printStrln("       0     1     2     3     4     5     6     7     8     9     a     b     c     d     e     f\n");
+    this->interface->mserial->printStrln("        0     1     2     3     4     5     6     7     8     9     a     b     c     d     e     f");
     this->interface->mserial->printStr( this->interface->mserial->padString( "00:", 6) );
     
     for (uint8_t i = 3; i < 0x78; i++){
@@ -228,12 +229,15 @@ void ONBOARD_SENSORS::I2Cscanner() {
         if (res == 0){
           this->interface->mserial->printStr( " [" + String(buffer) + "] " );
           count++;
+        }else if (res == -1) {
+          this->interface->mserial->printStr( " - -  " );
         }else{
           this->interface->mserial->printStr( this->interface->mserial->padString( " E" + String(res)+" ", 6) );
+          count2++;
         }
         i2c_cmd_link_delete(cmd);
     }
-  this->interface->mserial->printStrln("\nFound " + String(count) + " device(s)." );
+  this->interface->mserial->printStrln("\nFound " + String(count+count2) + " device(s)." + String(count2) + " device(s) with error.");
   if (count == 0) {
       interface->onBoardLED->led[1] = interface->onBoardLED->LED_RED;
       interface->onBoardLED->statusLED(100,2); 

@@ -49,7 +49,7 @@ M_WIFI_CLASS::M_WIFI_CLASS(){
   this->WIFIconnected=false;
   this->BLE_IS_DEVICE_CONNECTED=false;
   this->InternetIPaddress = "";
-  this->requestGeoLocationDateTime = "";
+  this->requestGeoLocationDateTime = 0;
   
 }
 
@@ -176,12 +176,11 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
    int cnt = 0;        
   uint8_t statusWIFI=WL_DISCONNECTED;
   
-  this->interface->mserial->printStr("Connecting ("+ String(this->getNumberWIFIconfigured() ) + ") : ");
+  this->interface->mserial->printStr("Connecting ("+ String(numberAttempts) +")("+ String(this->getNumberWIFIconfigured() ) + ") : ");
   while (statusWIFI != WL_CONNECTED) {
     // Connect to Wi-Fi using wifiMulti (connects to the SSID with strongest connection)
     this->interface->mserial->printStr( "#" );
     int result = this->wifiMulti->run(this->connectionTimeout) ;
-    this->interface->mserial->printStr( "< " );
 
     if( result == WL_CONNECTED) {        
       this->interface->mserial->printStrln(" >> OK."); 
@@ -672,7 +671,8 @@ bool M_WIFI_CLASS::get_ip_address(){
 
   String serverPath = "http://api.ipify.org";
   this->interface->mserial->printStr("request external IP address...");
-  http.begin(serverPath.c_str());      
+  http.begin(serverPath.c_str());
+  http.setTimeout(128000);      
   // Send HTTP GET request
   int httpResponseCode = http.GET();
   if (httpResponseCode>0) {
@@ -685,7 +685,7 @@ bool M_WIFI_CLASS::get_ip_address(){
       this->interface->mserial->printStrln("Error retrieving External IP address");
     }
   }else {
-    this->interface->mserial->printStrln("response code error: " + String(httpResponseCode) );
+    this->interface->mserial->printStrln("err code: " + String(httpResponseCode) );
   }
   // Free resources
   http.end();
@@ -699,7 +699,8 @@ bool M_WIFI_CLASS::get_ip_geo_location_data(String ipAddress , bool override ){
     if ( ( millis() - this->$espunixtimePrev) < this->REQUEST_DELTA_TIME_GEOLOCATION )
       return false;
   }
-
+  
+  this->start(10000, 5);
   if (WiFi.status() != WL_CONNECTED ){
     this->interface->mserial->printStrln("GEO Location: unable to connect to WIFI.");
     this->interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
@@ -723,7 +724,8 @@ bool M_WIFI_CLASS::get_ip_geo_location_data(String ipAddress , bool override ){
 
   this->interface->mserial->printStrln( "Requesting Geo Location data... one moment." ); 
   
-  http.begin(serverPath.c_str());      
+  http.begin(serverPath.c_str()); 
+  http.setTimeout(128000);          
   // Send HTTP GET request
   int httpResponseCode = http.GET();
       
@@ -763,7 +765,7 @@ bool M_WIFI_CLASS::get_ip_geo_location_data(String ipAddress , bool override ){
       interface->onBoardLED->statusLED(100, 1);
       return false;
   }else{
-    this->requestGeoLocationDateTime= String( this->interface->rtc.getDateTime(true) );
+    this->requestGeoLocationDateTime=  this->interface->rtc.getEpoch();
   }
   // Free resources
   http.end();
@@ -882,9 +884,12 @@ bool M_WIFI_CLASS::gbrl_commands(String $BLE_CMD, uint8_t sendTo ){
       return true;
     }
 
+    ESP32Time rtc(0);
+    rtc.setTime( this->requestGeoLocationDateTime  );
+
     dataStr="GeoLocation Data:\n";
     dataStr += "Internet I.P. address: " + this->InternetIPaddress + "\n";
-    dataStr += "Time of last request: " + this->requestGeoLocationDateTime + "\n";
+    dataStr += "Time of last request: " + String( rtc.getDateTime(true) ) + "\n";
     
     if ( this->geoLocationInfoJson.isNull() == true ){
       dataStr="NULL geoLocation data.\n";
