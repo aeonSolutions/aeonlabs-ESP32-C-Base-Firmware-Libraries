@@ -19,10 +19,19 @@
 # [![CodeFactor](https://www.codefactor.io/repository/github/aeonsolutions/aeonlabs-esp32-c-base-firmware-libraries/badge)](https://www.codefactor.io/repository/github/aeonsolutions/aeonlabs-esp32-c-base-firmware-libraries) ESP32 C++ Base Firmware Libraries
 **current project Total: > 500 work.h**
 
-These are simple C++ class libraries i maintain to speed up firmware code developent on all my ESP32 PCB electonics.
-This is still an early code develpment. Is memory intensive and lacks many code optimizations.
+These are simple C++ class libraries I maintain to speed up firmware code development on all my ESP32 PCB electronics.
+This is still an early code development. Is memory intensive and lacks many code optimizations.
 
-Currently it uncludes:
+<br>
+
+**Hire me on Fiverr**
+
+If you like my work here and are looking to design and deploy your own smart device you can [hire me on Fiverr](https://www.fiverr.com/s/GjmPxe). The price starts at $25. 
+
+
+<br>
+
+Currently, it includes:
 
 - TFT LCD Display Library (uses [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI))
 - Geolocation over WIFI 
@@ -34,33 +43,33 @@ Currently it uncludes:
    - VL6180x Laser sensor
    - LSM6DS3 motion sensor
 - Onboard sensors 
-   - AHT2x/ SHT3x Temperature & Humidty sensor
+   - AHT2x/ SHT3x Temperature & Humidity sensor
    - LSM6DS3 motion sensor
-- FFat File managment (uses [LittleFs](https://github.com/littlefs-project/littlefs) )
-- WIFI connectivity managemnt
-- NPT Internet Time Syncronization
+- FFat File management (uses [LittleFs](https://github.com/littlefs-project/littlefs) )
+- WIFI connectivity management
+- NPT Internet Time Synchronization
 - $GBRL command style communication
    - over Serial USB-C interface
    - over Bluetooth BLE interface
 - Microprocessor Core Frequency Management
 - Some simple Math functions
 - CSV style Files for settings and configuration
-- AT204SHA IC for unique data fingerprint identification on open environments 
+- AT204SHA IC for unique data fingerprint identification in open environments 
 - Dataset upload to a dataverse data repository. More info at www.dataverse.org and also on my [C++ API library](https://github.com/aeonSolutions/OpenScience-Dataverse-API-C-library) .
 
 <br>
 
 ## ToDo List
 
-  - Calc MD5 hash of the dataset file yo compare with json result on upload 
+  - Calc MD5 hash of the dataset file to compare with json result on upload 
   - ✓ ~~OTA firmware update~~
   - ✓ ~~Validate Json received on a new dataset upload~~
   - ✓ ~~Load dataset repository metadata~~
   - ✓ ~~Output board startup diagnostics serial stream to a Bluetooth or WIFI data stream~~
   - ✓ ~~accept GBRL like setup and config $ commands.~~
-  - SQLite database to store measured experumental data and upload to a dataverse repository
+  - SQLite database to store measured experimental data and upload to a dataverse repository
   - Swarm connectivity to other nearby Smart DAQ devices for experimental data redundancy and sharing (IoE - Internet of Everything). 
-  - Blockchain like data storage and exchange of experimental data collected
+  - Blockchain-like data storage and exchange of experimental data collected
   - Sensor Data multiple Signing with multiple unique Fingerprint ID requests to other Smart DAQ devices
   - ✓ ~~Automatic geolocation of experimental data origins using the wifi network it connects~~
   - ✓ ~~Motion Detection of unauthorized handling of a specimen during an ongoing experiment~~
