@@ -47,17 +47,18 @@ void SHT3X_SENSOR::init(INTERFACE_CLASS* interface, uint8_t SHT3X_ADDRESS){
   this->interface->mserial->printStr("init SHT3x sensor...");
   this->SHT3X_ADDRESS = SHT3X_ADDRESS;
 
-  this->sht3x = new SHT31();
+  this->sht3x = new Adafruit_SHT31();
   this->interface->mserial->printStrln("done.");
 }
 
 // ********************************************************
 bool SHT3X_SENSOR::startSHT3X() {
-    this->sht3x->begin(this->interface->I2C_SDA_IO_PIN , this->interface->I2C_SCL_IO_PIN );  
-    int status = this->sht3x->readStatus();
-    if ( status == 0 ){
+    bool result = this->sht3x->begin(this->SHT3X_ADDRESS);  
+    //int status = this->sht3x->isConnected();
+    if ( result  ){
         this->sensorAvailable = true;
-        this->interface->mserial->printStrln(" status code: " + String(this->sht3x->readStatus()));
+        this->interface->mserial->printStrln("done.");
+//        this->interface->mserial->printStrln(" status code: " + String(this->sht3x->readStatus()));
         return true;
     }else{
         this->sensorAvailable = false;
@@ -73,11 +74,13 @@ bool SHT3X_SENSOR::startSHT3X() {
     if (this->sensorAvailable == false) {
       startSHT3X(); 
     }  
+    this->sht3x->reset();
+    //this->sht3x->getError();
+    //this->sht3x->requestData();
+    //while(this->sht3x->dataReady() ){}
 
-    //this->sht3x.read();
-
-    float sht_temp = sht3x->getTemperature();
-    float sht_humidity = sht3x->getHumidity();
+    float sht_temp = sht3x->readTemperature();
+    float sht_humidity = sht3x->readHumidity();
 
     if (isnan(sht_temp)) { // check if 'is not a number'
       this->interface->mserial->printStrln("Failed to read temperature");

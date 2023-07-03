@@ -37,7 +37,8 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
   #include "../interface_class.h"
 #endif
 
-#include <SHT31.h>
+//#include <SHT31.h>
+#include "Adafruit_SHT31.h"
 
 #ifndef SHT3X_SENSOR_CLASS  
   #define SHT3X_SENSOR_CLASS
@@ -53,7 +54,8 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
       //AHT20 sensor  **********************************
       bool sensorAvailable;
       uint8_t SHT3X_ADDRESS;
-      SHT31* sht3x;
+      //SHT31* sht3x;
+      Adafruit_SHT31* sht3x;
 
       uint8_t numSensors;
       float* measurement;
