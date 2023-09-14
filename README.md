@@ -23,13 +23,6 @@ This is still an early code development. Is memory intensive and lacks many code
 
 <br>
 
-**Hire me on Fiverr**
-
-If you like my work here and are looking to design and deploy your own smart device you can [hire me on Fiverr](https://www.fiverr.com/s/GjmPxe). The price starts at $25. 
-
-
-<br>
-
 Currently, it includes:
 
 - TFT LCD Display Library (uses [TFT_eSPI](https://github.com/Bodmer/TFT_eSPI))
@@ -108,6 +101,15 @@ You can get in touch with me on my LinkedIn Profile:
 <a href="https://app.userfeel.com/t/2f6cb1e0" target="_blank"><img src="https://app.userfeel.com/tester/737648/image?.png" width="257" class="no-b-lazy"></a>
 
 You can also follow my GitHub Profile to stay updated about my latest projects: [![GitHub Follow](https://img.shields.io/badge/Connect-Miguel--Tomas-blue.svg?logo=Github&longCache=true&style=social&label=Follow)](https://github.com/aeonSolutions)
+
+<br>
+
+**Hire me**
+
+If you like my work here and are looking to design and deploy your own smart device you can hire me on:
+
+- [Fiverr](https://www.fiverr.com/s/GjmPxe). The price starts at $25
+- [Guru](https://www.guru.com/freelancers/miguel-tomas)
 
 <br>
 
