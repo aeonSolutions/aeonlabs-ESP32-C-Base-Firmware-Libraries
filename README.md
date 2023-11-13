@@ -51,22 +51,21 @@ Currently, it includes:
 
 <br>
 
-## ToDo List
+## Library Dependencies
+- ✓ DallasTemperature [view](https://www.arduino.cc/reference/en/libraries/dallastemperature/)
+- ✓ Onewire [view]( [view]())
+- ✓ Semphr [view](https://github.com/FreeRTOS/FreeRTOS-Kernel)
+- ✓ max6675 [view](https://github.com/adafruit/MAX6675-library)
+- ✓ arduinoJSON [view](https://arduinojson.org)
+- ✓ Adafruit_VL6180X [view](https://github.com/adafruit/Adafruit_VL6180X)
+- ✓ esp32FOTA [view](https://www.arduino.cc/reference/en/libraries/esp32fota/)
+- ✓ UniversalTelegramBot [view](https://www.arduino.cc/reference/en/libraries/esp32fota/)
+- ✓ AHT20 [view](https://www.arduino.cc/reference/en/libraries/aht20/)
+- ✓ SparkFunLSM6DS3 [view](https://github.com/sparkfun/SparkFun_LSM6DS3_Arduino_Library/blob/master/src/SparkFunLSM6DS3.h)
+- ✓ ESP32Ping [view](https://github.com/sparkfun/SparkFun_LSM6DS3_Arduino_Library/blob/master/src/SparkFunLSM6DS3.h)
+- ✓ Adafruit_SHT31 [view](https://github.com/sparkfun/SparkFun_LSM6DS3_Arduino_Library/blob/master/src/SparkFunLSM6DS3.h)
+- ✓ TFT_eSPI [view](https://github.com/sparkfun/SparkFun_LSM6DS3_Arduino_Library/blob/master/src/SparkFunLSM6DS3.h)
 
-  - Calc MD5 hash of the dataset file to compare with json result on upload 
-  - ✓ ~~OTA firmware update~~
-  - ✓ ~~Validate Json received on a new dataset upload~~
-  - ✓ ~~Load dataset repository metadata~~
-  - ✓ ~~Output board startup diagnostics serial stream to a Bluetooth or WIFI data stream~~
-  - ✓ ~~accept GBRL like setup and config $ commands.~~
-  - SQLite database to store measured experimental data and upload to a dataverse repository
-  - Swarm connectivity to other nearby Smart DAQ devices for experimental data redundancy and sharing (IoE - Internet of Everything). 
-  - Blockchain-like data storage and exchange of experimental data collected
-  - Sensor Data multiple Signing with multiple unique Fingerprint ID requests to other Smart DAQ devices
-  - ✓ ~~Automatic geolocation of experimental data origins using the wifi network it connects~~
-  - ✓ ~~Motion Detection of unauthorized handling of a specimen during an ongoing experiment~~
-  - ✓ ~~Smart Device Language Pack Downloader and Language Selection~~
-  - ✓ ~~Certificate of Authority (CA) Updater~~
 
 <br>
 
