@@ -53,7 +53,7 @@ Currently, it includes:
 
 ## How to use this Library
 If you're using Arduino Studio for windows, download this repository and unzip it to the "Arduino/libraries" folder located in "Documents". <br>
-Next rename the unziped folder to "AeonLabs". <br>
+Next rename the unziped folder "aeonlabs-ESP32-C-Base-Firmware-Libraries-main" to "AeonLabs". <br>
 Restart Arduino Studio, and the Aeonlabs library is now ready to be used. 
 
 
