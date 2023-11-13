@@ -73,6 +73,7 @@ Restart Arduino Studio, and the Aeonlabs library is now ready to be used.
 - ✓ ESP32Ping [view](https://github.com/sparkfun/SparkFun_LSM6DS3_Arduino_Library/blob/master/src/SparkFunLSM6DS3.h)
 - ✓ Adafruit_SHT31 [view](https://github.com/sparkfun/SparkFun_LSM6DS3_Arduino_Library/blob/master/src/SparkFunLSM6DS3.h)
 - ✓ TFT_eSPI [view](https://github.com/sparkfun/SparkFun_LSM6DS3_Arduino_Library/blob/master/src/SparkFunLSM6DS3.h)
+- ✓ ESP32Ping [view](https://github.com/marian-craciunescu/ESP32Ping)
 
 
 <br>
