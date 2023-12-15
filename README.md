@@ -52,6 +52,11 @@ Currently, it includes:
 - AT204SHA IC for unique data fingerprint identification in open environments 
 - Dataset upload to a dataverse data repository. More info at www.dataverse.org and also on my [C++ API library](https://github.com/aeonSolutions/OpenScience-Dataverse-API-C-library) .
 
+
+**Most recent code bugs corrected:** <br>
+- xSemaphoreTake initialization on the mserial and interface classes
+- mserial.printStr and mserial.printStrln now output serial data correctly to UART serial 
+
 <br>
 
 ## How to use this Library
