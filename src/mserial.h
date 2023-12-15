@@ -39,7 +39,8 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 #include  "BLECharacteristic.h"
 #include <HardwareSerial.h>
 #include "USB.h"
-
+#include <WiFi.h>
+#include "telegram.h"
 
 #ifndef  MSERIAL_DEF
   #define  MSERIAL_DEF
@@ -72,7 +73,8 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
       static constexpr uint8_t DEBUG_TO_UART = 11;
       static constexpr uint8_t DEBUG_TO_USB = 13;
       static constexpr uint8_t DEBUG_BOTH_USB_UART = 14;
-      static constexpr uint8_t DEBUG_ALL_USB_UART_BLE = 14;
+      static constexpr uint8_t DEBUG_ALL_USB_UART_BLE = 15;
+      static constexpr uint8_t DEBUG_TO_TELEGRAM = 16;
 
       bool DEBUG_EN; // ON / OFF
       uint8_t DEBUG_TO; // UART, BLE, USB   
@@ -83,6 +85,8 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
       String serialDataReceived;
       String serialUartDataReceived;
 
+      TELEGRAM_CLASS* telegram;
+      
       bool reinitialize_log_file(fs::FS &fs);
       void setDebugMode(boolean stat);
 

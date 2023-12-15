@@ -62,12 +62,16 @@ INTERFACE_CLASS::INTERFACE_CLASS(){
   // External Ports IO Pin assignment ________________________________
   this-> EXT_PLUG_PWR_EN = 2;
   this->BATTERY_ADC_IO= 1;
-
+  
+  this->McuFreqSemaphore = xSemaphoreCreateMutex();
+  this->MemLockSemaphoreCore1 = xSemaphoreCreateMutex();
+  this->MemLockSemaphoreCore2 = xSemaphoreCreateMutex();
 }
 
 void INTERFACE_CLASS::init( mSerial* mserial, bool DEBUG_ENABLE) {  
   this->mserial=mserial;
   this->mserial->DEBUG_EN=DEBUG_ENABLE;
+
   this->onBoardLED = new ONBOARD_LED_CLASS();
   this->onBoardLED->init();
 
@@ -111,7 +115,7 @@ void INTERFACE_CLASS::settings_defaults(){
   this->Measurments_NEW=false;
   this->config.SENSOR_DATA_FILENAME="measurements.csv";
   this->config.DEVICE_PASSWORD="";
-  
+  this->config.DEVICE_NAME ="device name not set";
   this->config.MOTION_SENSITIVITY = 0.07;
   this->config.language ="en";
 
@@ -125,23 +129,25 @@ void INTERFACE_CLASS::settings_defaults(){
 // ****************************************************
   bool INTERFACE_CLASS::setMCUclockFrequency(int clockFreq){
     xSemaphoreTake(this->McuFreqSemaphore, portMAX_DELAY);
-      this->McuFrequencyBusy = true;
-        this->UARTserial->flush();
+        this->McuFrequencyBusy = true;
+        if (this->UARTserial != nullptr)
+          this->UARTserial->flush();
         
-        setCpuFrequencyMhz(Freq);
+        setCpuFrequencyMhz(clockFreq);
         this->CURRENT_CLOCK_FREQUENCY=Freq;
-        if (Freq < 80) {
-          this->MCU_FREQUENCY_SERIAL_SPEED = 80 / Freq * this->SERIAL_DEFAULT_SPEED;
+        if (clockFreq < 80) {
+          this->MCU_FREQUENCY_SERIAL_SPEED = 80 / clockFreq * this->SERIAL_DEFAULT_SPEED;
         } else {
           this->MCU_FREQUENCY_SERIAL_SPEED = this->SERIAL_DEFAULT_SPEED;
         }
         
-        this->UARTserial->end();  
-        delay(300);
-        this->UARTserial->begin(this->MCU_FREQUENCY_SERIAL_SPEED);
-        this->UARTserial->print("The current Serial Baud speed on the UART Port is ");
-        this->UARTserial->println(this->MCU_FREQUENCY_SERIAL_SPEED);
-
+        if (this->UARTserial != nullptr){
+          this->UARTserial->end();  
+          delay(300);
+          this->UARTserial->begin(this->MCU_FREQUENCY_SERIAL_SPEED);
+          this->UARTserial->print("The current Serial Baud speed on the UART Port is ");
+          this->UARTserial->println(this->MCU_FREQUENCY_SERIAL_SPEED);
+        }
       this->mserial->printStrln("Setting MCU Freq to " + String(getCpuFrequencyMhz()) + "MHz" );
       this->McuFrequencyBusy = false;
     xSemaphoreGive(this->McuFreqSemaphore);
@@ -172,6 +178,7 @@ void INTERFACE_CLASS::settings_defaults(){
         return "JSON is null"; 
       }
     }
+
 
 
 // ***************************************************************************

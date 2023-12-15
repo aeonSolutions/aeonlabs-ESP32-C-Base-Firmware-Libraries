@@ -333,7 +333,8 @@ void M_WIFI_CLASS::WIFIscanNetworks(bool override){
       dataStr += (WiFi.encryptionType(i) == WIFI_AUTH_OPEN) ? " pwd: no\n" : " pwd: yes\n";
     }
     dataStr += "===============================\n";
-    this->interface->sendBLEstring(dataStr, mSerial::DEBUG_ALL_USB_UART_BLE);
+    this->interface->sendBLEstring(dataStr, mSerial::DEBUG_ALL_USB_UART_BLE); // ToDo: this does not sent over serial uart
+    this->interface->mserial->printStrln( dataStr );
   }  
 }
 

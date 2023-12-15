@@ -47,7 +47,7 @@ bool FILE_CLASS::init(fs::LittleFSFS &fs, String partitionName, uint8_t maxFiles
     this->mserial=mserial;
     this->onBoardLED=onBoardLED;
     
-    //this->mserial->printStrln("init drive 1...");
+    this->mserial->printStrln("init drive 1...");
     //this->mserial->printStrln("Onboard LED RED:" +  String(this->onBoardLED->led[0] ) );
     //this->mserial->printStrln("init drive 2...");
     //this->mserial->printStrln("Onboard LED RED:" + String(this->onBoardLED->led[0]) + " = " + String(this->onBoardLED->LED_RED ) );

@@ -50,7 +50,11 @@ ONBOARD_LED_CLASS::ONBOARD_LED_CLASS(){
   this->led[0]=  0;
 };
 
-void ONBOARD_LED_CLASS::init(){
+void ONBOARD_LED_CLASS::init(){  
+  ledcAttachPin(this->LED_GREEN_CH, this->LED_GREEN_CH);
+  ledcAttachPin(this->LED_BLUE_CH, this->LED_BLUE_CH);
+  ledcAttachPin(this->LED_RED, this->LED_RED_CH);
+
   ledcSetup(this->LED_GREEN_CH, 4000, 8); // 12 kHz PWM, 8-bit resolution
   ledcSetup(this->LED_RED_CH, 4000, 8); // 12 kHz PWM, 8-bit resolution
   ledcSetup(this->LED_BLUE_CH, 4000, 8); // 12 kHz PWM, 8-bit resolution

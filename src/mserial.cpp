@@ -53,6 +53,9 @@ mSerial::mSerial(bool DebugMode, HardwareSerial* UARTserial) {
 
   this->BLE_IS_DEVICE_CONNECTED = false;
   this->pCharacteristicTX = nullptr;
+
+  this->MemLockSemaphoreSerial = xSemaphoreCreateMutex();
+  this->MemLockSemaphoreUSBSerial = xSemaphoreCreateMutex();
   
 }
 
@@ -64,12 +67,15 @@ void mSerial::setDebugMode(boolean stat){
 // ----------------------------------------------------
 void mSerial::start(int baud) {
   if (this->DEBUG_EN) {
-    if ( this->DEBUG_TO == this->DEBUG_BOTH_USB_UART || this->DEBUG_TO == this->DEBUG_TO_USB ){    
+    if ( this->UARTserial == nullptr || this->DEBUG_TO == this->DEBUG_BOTH_USB_UART || this->DEBUG_TO == this->DEBUG_TO_USB ){    
       Serial.begin(115200);
-      Serial.println("\nmSerial started on the USB PORT.");
+      String wh= "USB PORT.";
+      if ( this->UARTserial == nullptr )
+         wh = "UART PORT.";
+      Serial.println("\nmSerial started on the " + String(wh));
     }
 
-    if ( this->DEBUG_TO == this->DEBUG_BOTH_USB_UART || this->DEBUG_TO == this->DEBUG_TO_UART ){
+    if ( this->UARTserial != nullptr && (this->DEBUG_TO == this->DEBUG_BOTH_USB_UART || this->DEBUG_TO == this->DEBUG_TO_UART) ){
       this->UARTserial->begin(baud);
       this->UARTserial->println("\nmSerial started on the UART PORT.");
     }
@@ -88,35 +94,44 @@ void mSerial::printStr(String str, uint8_t debugType, uint8_t DEBUG_TO ) {
 
 // ----------------------------------------------------------
   void mSerial::log( String str, uint8_t debugType, uint8_t debugTo ){
+    if (debugTo == this->DEBUG_TO_TELEGRAM){
+      this->telegram->bot->sendMessage( this->telegram->OWNER_CHAT_ID  ,  str, "");
+      return;
+    }
+
     if ( this->DEBUG_EN == false )
       return;
-      
+
     // String mem = "RAM: " + addThousandSeparators( std::string( String(esp_get_free_heap_size() ).c_str() ) )  + " b >> ";
-    String mem ="";
+    String mem = ""; //String("test:") + String(str);
     if ( debugTo == this->DEBUG_NONE )
       debugTo = this->DEBUG_TO;
 
-    if ( (this->DEBUG_EN && ( this->DEBUG_TYPE == debugType || this->DEBUG_TYPE == this->DEBUG_TYPE_VERBOSE ) ) || debugType == this->DEBUG_TYPE_INFO ) {
-
-      if ( ( debugTo== this->DEBUG_TO_BLE || debugTo == this->DEBUG_TO_BLE_UART )  ){
-          if (this->BLE_IS_DEVICE_CONNECTED)
-            this->sendBLEstring(str + String( char(10) ) );
+    if (this->BLE_IS_DEVICE_CONNECTED){
+      if ( (this->DEBUG_EN && ( this->DEBUG_TYPE == debugType || this->DEBUG_TYPE == this->DEBUG_TYPE_VERBOSE ) ) || debugType == this->DEBUG_TYPE_INFO ) {
+        if ( ( debugTo== this->DEBUG_TO_BLE || debugTo == this->DEBUG_TO_BLE_UART )  ){
+          this->sendBLEstring(str + String( char(10) ) );
+        }
       }
+    }
 
+     if (this->UARTserial != nullptr){
       if ( this->DEBUG_TO == this->DEBUG_TO_UART || this->DEBUG_TO  == this->DEBUG_TO_BLE_UART || this->DEBUG_TO == this->DEBUG_BOTH_USB_UART){ // debug to UART
         if ( debugTo == this->DEBUG_TO_UART || debugTo == this->DEBUG_TO_BLE_UART || debugTo== this->DEBUG_BOTH_USB_UART){ // debug to UART
+          //Serial.print(mem);
           xSemaphoreTake(MemLockSemaphoreSerial, portMAX_DELAY); // enter critical section
-            this->UARTserial->print(mem);
+            //this->UARTserial->print(mem);
             this->UARTserial->print(str);
             //this->UARTserial->flush();
           xSemaphoreGive(MemLockSemaphoreSerial); // exit critical section    
         }
       }
-      
-      if ( this->DEBUG_TO == this->DEBUG_TO_USB || this->DEBUG_TO  == this->DEBUG_TO_BLE_USB || this->DEBUG_TO == this->DEBUG_BOTH_USB_UART){ // debug to UART
-        if ( debugTo == this->DEBUG_TO_USB || debugTo == this->DEBUG_TO_BLE_USB  || debugTo == this->DEBUG_BOTH_USB_UART ){ // debug to USB
+     }
+
+      if (this->UARTserial== nullptr ||  this->DEBUG_TO == this->DEBUG_TO_USB || this->DEBUG_TO  == this->DEBUG_TO_BLE_USB || this->DEBUG_TO == this->DEBUG_BOTH_USB_UART){ // debug to UART
+        if ( this->UARTserial== nullptr || debugTo == this->DEBUG_TO_USB || debugTo == this->DEBUG_TO_BLE_USB  || debugTo == this->DEBUG_BOTH_USB_UART ){ // debug to USB
+          //Serial.print(mem);
           xSemaphoreTake(MemLockSemaphoreUSBSerial, portMAX_DELAY); // enter critical section
-            Serial.print(mem);
             Serial.print(str);
             //Serial.flush();
           xSemaphoreGive(MemLockSemaphoreUSBSerial); // exit critical section    
@@ -126,8 +141,8 @@ void mSerial::printStr(String str, uint8_t debugType, uint8_t DEBUG_TO ) {
       if (this->DEBUG_SEND_REPOSITORY){
           this->saveLog(LittleFS, str);
       }
-    }
   }
+  
   
   // -----------------------------------------------------------------
 bool mSerial::readSerialData(){

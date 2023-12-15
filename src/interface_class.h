@@ -47,7 +47,6 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 #include "mserial.h"
 #include "onboard_led.h"
 
-
 #ifndef INTERFACE_CLASS_DEF
   #define INTERFACE_CLASS_DEF
 
@@ -88,6 +87,7 @@ class INTERFACE_CLASS {
 
       String DEVICE_PASSWORD;
       String DEVICE_BLE_NAME;
+      String DEVICE_NAME;
 
       String language;
 
@@ -171,7 +171,7 @@ class INTERFACE_CLASS {
     HardwareSerial* UARTserial;
     TwoWire* wirePort;
 
-    void init(mSerial* mserial, bool DEBUG_ENABLE);
+    void init( mSerial* mserial, bool DEBUG_ENABLE);
     void init_BLE(BLECharacteristic *pCharacteristicTX);
     void settings_defaults();
 
