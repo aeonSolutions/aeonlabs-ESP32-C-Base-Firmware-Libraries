@@ -122,7 +122,7 @@ class INTERFACE_CLASS {
     //  24, 12          <<< For 24MHz XTAL
     // For More Info Visit: https://deepbluembedded.com/esp32-change-cpu-speed-clock-frequency/
 
-    int8_t SAMPLING_FREQUENCY ; 
+    int8_t SAMPLING_FREQUENCY;
 
     int MAX_FREQUENCY ; 
     int WIFI_FREQUENCY ; // min WIFI MCU Freq is 80-240
@@ -166,7 +166,7 @@ class INTERFACE_CLASS {
     // functions and methods  ****************************
     INTERFACE_CLASS();
 
-    mSerial* mserial;
+    mSerial* mserial = nullptr;
     ONBOARD_LED_CLASS* onBoardLED;
     HardwareSerial* UARTserial;
     TwoWire* wirePort;
@@ -184,6 +184,7 @@ class INTERFACE_CLASS {
     void sendBLEstring(String message="",  uint8_t sendTo = mSerial::DEBUG_ALL_USB_UART_BLE );
 
     bool setMCUclockFrequency(int clockFreq);
+    int getMCUclockFrequency();
 
     bool loadDeviceLanguagePack(String country, uint8_t sendTo );
     bool loadBaseLanguagePack(String country, uint8_t sendTo );

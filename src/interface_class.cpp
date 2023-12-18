@@ -42,6 +42,7 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 
 
 INTERFACE_CLASS::INTERFACE_CLASS(){
+  this->mserial = nullptr;
   this->firmware_version="-.-.-";
   this->DATA_VALIDATION_KEY = "A9CD7F1B6688159B54BBE862F638FF9D29E0FA5F87C69D27BFCD007814BA69C9";
   
@@ -101,7 +102,7 @@ void INTERFACE_CLASS::settings_defaults(){
   this->$espunixtimeStartMeasure= time(0);
 
   this->WIFI_FREQUENCY=80 ; // min WIFI MCU Freq is 80-240
-  this->MIN_MCU_FREQUENCY=10;
+  this->MIN_MCU_FREQUENCY=80;
   
   this->config.BOARD_VDD = 3.34;
 
@@ -124,7 +125,8 @@ void INTERFACE_CLASS::settings_defaults(){
   this->config.gmtOffset_sec = 0;
   this->config.daylightOffset_sec = 3600;
   
-  this->mserial->printStrln("settings defaults loaded.");
+  if (this->mserial != nullptr)
+    this->mserial->printStrln("settings defaults loaded.");
 }
 // ****************************************************
   bool INTERFACE_CLASS::setMCUclockFrequency(int clockFreq){
@@ -153,7 +155,10 @@ void INTERFACE_CLASS::settings_defaults(){
     xSemaphoreGive(this->McuFreqSemaphore);
     return true;
   };
-
+// **************************************
+int INTERFACE_CLASS::getMCUclockFrequency(){
+    return  this->CURRENT_CLOCK_FREQUENCY;
+}
 // ***************************************************************
     String INTERFACE_CLASS::DeviceTranslation(String key){
       if ( this->deviceLangJson.isNull() == false ){

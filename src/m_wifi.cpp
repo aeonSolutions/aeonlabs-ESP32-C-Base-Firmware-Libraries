@@ -158,6 +158,7 @@ void M_WIFI_CLASS::startAP() {
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(apIP, apIP, netMsk);
   WiFi.softAP(AP_SSID, AP_PASSWORD);
+  WiFi.setTxPower(WIFI_POWER_11dBm);
 }
 // **************************************************
 
@@ -180,6 +181,7 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
   while (statusWIFI != WL_CONNECTED) {
     // Connect to Wi-Fi using wifiMulti (connects to the SSID with strongest connection)
     this->interface->mserial->printStr( "#" );
+    WiFi.setTxPower(WIFI_POWER_11dBm);
     int result = this->wifiMulti->run(this->connectionTimeout) ;
 
     if( result == WL_CONNECTED) {        
@@ -260,9 +262,10 @@ void M_WIFI_CLASS::setNumberWIFIconfigured(uint8_t num){
  void M_WIFI_CLASS::resumePowerSavingMode(){
     this->interface->mserial->printStrln("WIFI: setting power saving mode.");
     if (this->ALWAYS_ON_WIFI == false){
-      WiFi.disconnect(true);
-      delay(100);
-      WiFi.mode(WIFI_MODE_NULL);
+      //WiFi.disconnect(true);
+      //delay(100);
+      //WiFi.mode(WIFI_MODE_NULL);
+      esp_wifi_stop();
       this->interface->setMCUclockFrequency( interface->MIN_MCU_FREQUENCY);
       interface->CURRENT_CLOCK_FREQUENCY = interface->MIN_MCU_FREQUENCY;
     }else{
@@ -284,6 +287,8 @@ void M_WIFI_CLASS::setNumberWIFIconfigured(uint8_t num){
       this->interface->mserial->printStrln("setting to WIFI EN CPU Freq = " + String(getCpuFrequencyMhz()));
       this->interface->McuFrequencyBusy = false;
   xSemaphoreGive(this->interface->McuFreqSemaphore);
+  esp_wifi_start();
+
  }
 // ********************************************************
 
