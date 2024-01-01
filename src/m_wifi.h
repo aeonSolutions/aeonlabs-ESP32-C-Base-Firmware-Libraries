@@ -85,6 +85,9 @@ class M_WIFI_CLASS {
   public:
     String OTA_FIRMWARE_SERVER_URL;
     bool ALWAYS_ON_WIFI;
+    bool credentialsAdded;
+
+    wifi_power_t setTxPower;
 
     typedef struct{
       // firmmware update  ***************************
@@ -117,6 +120,7 @@ class M_WIFI_CLASS {
     
     uint32_t          connectionTimeout;
     bool              WIFIconnected;
+    bool              WIFIstopped;
     uint8_t           number_WIFI_networks;
     SemaphoreHandle_t MemLockSemaphoreWIFI;
     unsigned long $espunixtimeDeviceDisconnected;
@@ -134,11 +138,15 @@ M_WIFI_CLASS();
 void init(INTERFACE_CLASS* interface, FILE_CLASS* drive,  ONBOARD_LED_CLASS* onboardLED);
 void settings_defaults();
 
-bool start(uint32_t  connectionTimeout, uint8_t numberAttempts);
+bool connect(uint32_t  connectionTimeout, uint8_t numberAttempts);
+void stop();
+void start();
 
 bool connect2WIFInetowrk(uint8_t numberAttempts);
 
 String get_wifi_status(int status);
+String get_WIFIencryptionType();
+String get_WIFItxPower();
 void WIFIscanNetworks(bool override = false);
 
 void updateInternetTime();

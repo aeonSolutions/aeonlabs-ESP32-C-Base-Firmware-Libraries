@@ -39,6 +39,7 @@ https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/AeonLabs-Solutio
 #include "m_file_functions.h"
 #include "cert/github_cert.h"
 #include "esp_wifi.h"
+#include "WiFi.h"
 
 #ifndef ESP32PING_H
   #include <ESP32Ping.h>
@@ -50,7 +51,9 @@ M_WIFI_CLASS::M_WIFI_CLASS(){
   this->BLE_IS_DEVICE_CONNECTED=false;
   this->InternetIPaddress = "";
   this->requestGeoLocationDateTime = 0;
-  
+  this->credentialsAdded =false;
+
+  this->setTxPower = WIFI_POWER_11dBm;
 }
 
 
@@ -101,7 +104,7 @@ void M_WIFI_CLASS::settings_defaults(){
 
 // ************************************************
 
-bool M_WIFI_CLASS::start(uint32_t  connectionTimeout, uint8_t numberAttempts){
+bool M_WIFI_CLASS::connect(uint32_t  connectionTimeout, uint8_t numberAttempts){
   if (WiFi.status() == WL_CONNECTED)
     return true;
 
@@ -126,11 +129,13 @@ bool M_WIFI_CLASS::start(uint32_t  connectionTimeout, uint8_t numberAttempts){
   WiFi.mode(WIFI_STA);
   delay(500);
 
-  for(uint8_t i=0; i < 5; i++){
-    if (this->config.ssid[i] !="")
-      this->wifiMulti->addAP(this->config.ssid[i].c_str(), this->config.password[i].c_str());        
+  if (this->credentialsAdded == false){
+    for(uint8_t i=0; i < 5; i++){
+      if (this->config.ssid[i] !="")
+        this->wifiMulti->addAP(this->config.ssid[i].c_str(), this->config.password[i].c_str());        
+    }
+    this->credentialsAdded = true;
   }
-
   interface->onBoardLED->led[0] = interface->onBoardLED->LED_BLUE;
   interface->onBoardLED->statusLED(100, 1);
 
@@ -138,7 +143,20 @@ bool M_WIFI_CLASS::start(uint32_t  connectionTimeout, uint8_t numberAttempts){
   this->lastTimeWifiConnectAttempt=millis();
   return true;
 }
-
+// ************************************************
+void M_WIFI_CLASS::start(){
+  if (this->WIFIstopped == true) {
+    esp_wifi_start();
+    this->WIFIstopped=false;
+  }
+}
+//**************************************************
+ void M_WIFI_CLASS::stop(){
+  if (this->WIFIstopped != true) {
+    esp_wifi_stop();
+    this->WIFIstopped=true;
+  }
+ }
 
 // ********************************************
 
@@ -158,7 +176,7 @@ void M_WIFI_CLASS::startAP() {
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(apIP, apIP, netMsk);
   WiFi.softAP(AP_SSID, AP_PASSWORD);
-  WiFi.setTxPower(WIFI_POWER_11dBm);
+  WiFi.setTxPower( this->setTxPower );
 }
 // **************************************************
 
@@ -181,15 +199,16 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
   while (statusWIFI != WL_CONNECTED) {
     // Connect to Wi-Fi using wifiMulti (connects to the SSID with strongest connection)
     this->interface->mserial->printStr( "#" );
-    WiFi.setTxPower(WIFI_POWER_11dBm);
+    WiFi.setTxPower( this->setTxPower );
     int result = this->wifiMulti->run(this->connectionTimeout) ;
 
     if( result == WL_CONNECTED) {        
       this->interface->mserial->printStrln(" >> OK."); 
-      this->interface->mserial->printStrln( "Connection Details");
-      this->interface->mserial->printStrln( "   Network : " + String( WiFi.SSID() ) + " (" + String( this->RSSIToPercent(WiFi.RSSI() ) ) + "%)" );
-      this->interface->mserial->printStrln( "        IP : "+WiFi.localIP().toString());
-      this->interface->mserial->printStrln( "   Gateway : "+WiFi.gatewayIP().toString());
+      this->interface->mserial->printStrln("Connection Details");
+      this->interface->mserial->printStr("   Network ("+ String(this->get_WIFItxPower()) +"): " + String( WiFi.SSID() ) + " (" + String( this->RSSIToPercent(WiFi.RSSI()) ) + "%)" );
+      this->interface->mserial->printStrln(" CH:" +  String(WiFi.channel()) + " Enc. type:" + this->get_WIFIencryptionType() );
+      this->interface->mserial->printStrln("        IP : "+WiFi.localIP().toString());
+      this->interface->mserial->printStrln("   Gateway : "+WiFi.gatewayIP().toString());
 
       if(!Ping.ping("www.google.com", 3)){
         this->interface->mserial->printStrln( "\nno Internet connectivity found.");
@@ -215,12 +234,89 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
   return true;
 }
 // ****************************************************
+String M_WIFI_CLASS::get_WIFItxPower(){
+  switch (this->setTxPower){
+      case WIFI_POWER_19_5dBm:
+          return "19_5dBm";
+          break;
+      case WIFI_POWER_19dBm:
+          return "19dBm";
+          break;                
+      case WIFI_POWER_18_5dBm:
+          return "18_5dBm";
+          break;
+      case WIFI_POWER_17dBm:
+          return "17dBm";
+          break;                
+      case WIFI_POWER_15dBm:
+          return "15dBm";
+          break;
+      case WIFI_POWER_13dBm:
+          return "13dBm";
+          break;                
+      case WIFI_POWER_11dBm:
+          return "11dBm";
+          break;
+      case WIFI_POWER_8_5dBm:
+          return "8.5dBm";
+          break;                
+      case WIFI_POWER_7dBm:
+          return "7dBm";
+          break;
+      case WIFI_POWER_5dBm:
+          return "5dBm";
+          break;                
+      case WIFI_POWER_2dBm:
+          return "2dBm";
+          break;
+
+      default:
+          return "unknown";
+  }
+}
+
+// *****************************************************
+String M_WIFI_CLASS::get_WIFIencryptionType(){
+       switch ( WiFi.encryptionType(0) ){  // not working
+            case WIFI_AUTH_OPEN:
+                return "OPEN";
+                break;
+            case WIFI_AUTH_WEP:
+                return "WEP";
+                break;
+            case WIFI_AUTH_WPA_PSK:
+                return "WPA";
+                break;
+            case WIFI_AUTH_WPA2_PSK:
+                return "WPA2";
+                break;
+            case WIFI_AUTH_WPA_WPA2_PSK:
+                return "WPA+WPA2";
+                break;
+            case WIFI_AUTH_WPA2_ENTERPRISE:
+                return "WPA2-EAP";
+                break;
+            case WIFI_AUTH_WPA3_PSK:
+                return "WPA3";
+                break;
+            case WIFI_AUTH_WPA2_WPA3_PSK:
+                return "WPA2+WPA3";
+                break;
+            case WIFI_AUTH_WAPI_PSK:
+                return "WAPI";
+                break;
+            default:
+                return "unknown";
+        }
+}
+// *************************************************
 
 void M_WIFI_CLASS::clear_wifi_networks(bool saveSettings){
   for(int i=0; i<5 ; i++){
     this->config.ssid[i] = "";
     this->config.password[i] = "";
   }
+  this->credentialsAdded = false;
   this->number_WIFI_networks=0;
   if (saveSettings)
     this->saveSettings();
@@ -599,7 +695,7 @@ bool M_WIFI_CLASS::downloadFileHttpGet(String filename, String httpAddr, uint8_t
   }
 
  if (WiFi.status() != WL_CONNECTED){
-    this->start(10000, 5); // TTL , n attempts 
+    this->connect(10000, 5); // TTL , n attempts 
   }
   
   if (WiFi.status() != WL_CONNECTED ){
@@ -706,7 +802,7 @@ bool M_WIFI_CLASS::get_ip_geo_location_data(String ipAddress , bool override ){
       return false;
   }
   
-  this->start(10000, 5);
+  this->connect(10000, 5);
   if (WiFi.status() != WL_CONNECTED ){
     this->interface->mserial->printStrln("GEO Location: unable to connect to WIFI.");
     this->interface->onBoardLED->led[0] = interface->onBoardLED->LED_RED;
@@ -797,7 +893,7 @@ uint8_t M_WIFI_CLASS::RSSIToPercent(long rssi) {
 // Over The Air Firmware Update ********************************************************
 // ************************************************************************************
 void M_WIFI_CLASS::startFirmwareUpdate(){
-    if (this->start(10000, 5) == false)
+    if (this->connect(10000, 5) == false)
       return; 
 
     this->forceFirmwareUpdate=false;
@@ -885,7 +981,7 @@ bool M_WIFI_CLASS::gbrl_commands(String $BLE_CMD, uint8_t sendTo ){
   }
 
   if($BLE_CMD=="$geo info"){
-    this->start(10000,5);
+    this->connect(10000,5);
     if ( false == this->get_ip_geo_location_data( "", true ) ){
       return true;
     }

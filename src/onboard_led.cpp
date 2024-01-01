@@ -63,12 +63,15 @@ void ONBOARD_LED_CLASS::init(){
 
 void ONBOARD_LED_CLASS::turnOffAllStatusLED(){
     // TURN OFF ALL LED
+  ledcWrite(this->LED_RED, 255);
   ledcDetachPin(this->LED_RED);
   pinMode(this->LED_RED,INPUT);
 
+  ledcWrite(this->LED_BLUE, 255);
   ledcDetachPin(this->LED_BLUE);
   pinMode(this->LED_BLUE,INPUT);
 
+  ledcWrite(this->LED_GREEN, 255);
   ledcDetachPin(this->LED_GREEN);
   pinMode(this->LED_GREEN,INPUT);
 
@@ -79,6 +82,7 @@ void ONBOARD_LED_CLASS::statusLED(  uint8_t brightness, float time) {
   this->turnOffAllStatusLED();
 
   int8_t ch;
+  int8_t led;
   bool hasRed=false;
 
   for(int i=0; i < 3; i++){
@@ -87,34 +91,35 @@ void ONBOARD_LED_CLASS::statusLED(  uint8_t brightness, float time) {
   } 
 
   // turn ON LED
-  int bright = floor(255-(brightness/100*255));
+  double bf = (double) brightness*0.6/100*255;
+  int bright = (int)bf;
 
   for(int i=0; i < 3; i++){
     if( this->led[i] == this->LED_RED ){
-      ch=this->LED_RED_CH;
-      pinMode(this->LED_RED,OUTPUT);
-      ledcAttachPin(this->LED_RED, this->LED_RED_CH);
-      ledcWrite(ch, bright);
+      ch = this->LED_RED_CH;
+      led = this->LED_RED;
+    }
+
+    if( this->led[i] == this->LED_GREEN ||  this->led[i] == this->LED_BLUE ){
+      if (hasRed){
+        bf = (double) brightness*0.3/100*255;
+        bright = (int)bf;
+      }
     }
 
     if( this->led[i] == this->LED_GREEN ){
-      ch=this->LED_GREEN_CH;
-      pinMode(this->LED_GREEN,OUTPUT);
-      ledcAttachPin(this->LED_GREEN, this->LED_GREEN_CH);
-      if (hasRed)
-        bright = floor(255-((brightness*0.7)/100*255));
-      ledcWrite(ch, bright);
+      ch = this->LED_GREEN_CH;
+      led = this->LED_GREEN;
     }
 
     if( this->led[i] == this->LED_BLUE ){
-      ch=this->LED_BLUE_CH;
-      pinMode(this->LED_BLUE,OUTPUT);
-      ledcAttachPin(this->LED_BLUE, this->LED_BLUE_CH);
-      if (hasRed)
-        bright = floor(255-((brightness*0.6)/100*255));
-        
-      ledcWrite(ch, bright);
+      ch = this->LED_BLUE_CH;
+      led = this->LED_BLUE,OUTPUT;
     }
+    
+    pinMode(led,OUTPUT);
+    ledcAttachPin(led, ch);
+    ledcWrite(ch, bright);
   }
 
   this->led[0]=  0;
