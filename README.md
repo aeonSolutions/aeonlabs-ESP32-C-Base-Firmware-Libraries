@@ -54,6 +54,12 @@ Currently, it includes:
 
 
 **Most recent code bugs corrected:** <br>
+1-1-2024
+- WiFi connectivity after light sleep is now working
+- onboard RGB LED is now turning ON the exact RGB color 
+
+<br>
+
 - xSemaphoreTake initialization on the mserial and interface classes
 - mserial.printStr and mserial.printStrln now output serial data correctly to UART serial 
 
