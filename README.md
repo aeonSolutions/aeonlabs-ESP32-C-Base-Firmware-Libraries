@@ -58,10 +58,7 @@ Currently, it includes:
 - WiFi connectivity after light sleep is now working
 - onboard RGB LED is now turning ON the exact RGB color 
 
-<br>
-
-- xSemaphoreTake initialization on the mserial and interface classes
-- mserial.printStr and mserial.printStrln now output serial data correctly to UART serial 
+View the full [reviion history](https://github.com/aeonSolutions/aeonlabs-ESP32-C-Base-Firmware-Libraries/wiki/revision-history). 
 
 <br>
 
@@ -123,13 +120,11 @@ You can get in touch with me on my LinkedIn Profile:
 
 You can also follow my GitHub Profile to stay updated about my latest projects: [![GitHub Follow](https://img.shields.io/badge/Connect-Miguel--Tomas-blue.svg?logo=Github&longCache=true&style=social&label=Follow)](https://github.com/aeonSolutions)
 
-**Hire me**
+<br>
 
-If you like my work here and are looking to design and deploy your own smart device you can hire me on:
+**Hire me** <br>
+See [here](https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/wiki/How-to-Hire-AeonLabs) how to hire AeonLabs.
 
-- [Fiverr](https://www.fiverr.com/s/GjmPxe). The price starts at $25
-- [Guru](https://www.guru.com/freelancers/miguel-tomas)
-- 
 <br>
 
 ### Be supportive of my dedication and work towards technology education and buy me a cup of coffee
