@@ -15,11 +15,11 @@
 
 <p align="right">
  <a href="https://github-com.translate.goog/aeonSolutions/aeonlabs-ESP32-C-Base-Firmware-Libraries?_x_tr_sl=en&_x_tr_tl=pt&_x_tr_hl=en&_x_tr_pto=wapp">Change Language</a> <br>
-Last update: 18-12-2023
+Last update: 1-1-2024
 </p>
 
 # [![CodeFactor](https://www.codefactor.io/repository/github/aeonsolutions/aeonlabs-esp32-c-base-firmware-libraries/badge)](https://www.codefactor.io/repository/github/aeonsolutions/aeonlabs-esp32-c-base-firmware-libraries) ESP32 C++ Base Firmware Libraries
-**current project Total: > 500 work.h**
+**current project Total: > 520 work.h**
 
 These are simple C++ class libraries I maintain to speed up firmware code development on all my ESP32 PCB electronics.
 This is still an early code development. Is memory intensive and lacks many code optimizations.
