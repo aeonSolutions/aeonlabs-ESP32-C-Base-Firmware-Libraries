@@ -202,25 +202,29 @@ bool M_WIFI_CLASS::connect2WIFInetowrk(uint8_t numberAttempts){
     WiFi.setTxPower( this->setTxPower );
     int result = this->wifiMulti->run(this->connectionTimeout) ;
 
-    if( result == WL_CONNECTED) {        
-      this->interface->mserial->printStrln(" >> OK."); 
-      this->interface->mserial->printStrln("Connection Details");
-      this->interface->mserial->printStr("   Network ("+ String(this->get_WIFItxPower()) +"): " + String( WiFi.SSID() ) + " (" + String( this->RSSIToPercent(WiFi.RSSI()) ) + "%)" );
-      this->interface->mserial->printStrln(" CH:" +  String(WiFi.channel()) + " Enc. type:" + this->get_WIFIencryptionType() );
-      this->interface->mserial->printStrln("        IP : "+WiFi.localIP().toString());
-      this->interface->mserial->printStrln("   Gateway : "+WiFi.gatewayIP().toString());
+  if(WiFi.status() != WL_CONNECTED && WiFi.status() != WL_NO_SSID_AVAIL){
+    this->interface->mserial->printStrln("\nPassword is not correct");
+  }else if(WiFi.status() != WL_CONNECTED && WiFi.status() == WL_NO_SSID_AVAIL){
+    this->interface->mserial->printStrln("\nWifi network is not avaliable");
+  }else{
+    this->interface->mserial->printStrln(" >> OK."); 
+    this->interface->mserial->printStrln("Connection Details");
+    this->interface->mserial->printStr("   Network ("+ String(this->get_WIFItxPower()) +"): " + String( WiFi.SSID() ) + " (" + String( this->RSSIToPercent(WiFi.RSSI()) ) + "%)" );
+    this->interface->mserial->printStrln(" CH:" +  String(WiFi.channel()) + " Enc. type:" + this->get_WIFIencryptionType() );
+    this->interface->mserial->printStrln("        IP : "+WiFi.localIP().toString());
+    this->interface->mserial->printStrln("   Gateway : "+WiFi.gatewayIP().toString());
 
-      if(!Ping.ping("www.google.com", 3)){
-        this->interface->mserial->printStrln( "\nno Internet connectivity found.");
-      }else{
-        //init time
-        configTime(this->interface->config.gmtOffset_sec, this->interface->config.daylightOffset_sec, this->config.ntpServer.c_str());
-        this->updateInternetTime();
-        this->get_ip_geo_location_data();
-      }
-
-      return true;
+    if(!Ping.ping("www.google.com", 3)){
+      this->interface->mserial->printStrln( "\nno Internet connectivity found.");
+    }else{
+      //init time
+      configTime(this->interface->config.gmtOffset_sec, this->interface->config.daylightOffset_sec, this->config.ntpServer.c_str());
+      this->updateInternetTime();
+      this->get_ip_geo_location_data();
     }
+
+    return true;
+  }
     
     cnt++;
     if (cnt == numberAttempts ){ 
