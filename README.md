@@ -15,7 +15,7 @@
 
 <p align="right">
  <a href="https://github-com.translate.goog/aeonSolutions/aeonlabs-ESP32-C-Base-Firmware-Libraries?_x_tr_sl=en&_x_tr_tl=pt&_x_tr_hl=en&_x_tr_pto=wapp">Change Language</a> <br>
-Last update: 1-1-2024
+Last update: 3-1-2024
 </p>
 
 # [![CodeFactor](https://www.codefactor.io/repository/github/aeonsolutions/aeonlabs-esp32-c-base-firmware-libraries/badge)](https://www.codefactor.io/repository/github/aeonsolutions/aeonlabs-esp32-c-base-firmware-libraries) ESP32 C++ Base Firmware Libraries
