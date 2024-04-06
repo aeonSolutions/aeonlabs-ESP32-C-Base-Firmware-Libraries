@@ -88,13 +88,15 @@ Restart Arduino Studio, and the Aeonlabs library is now ready to be used.
 
 <br>
 
-### Smart Devices I prototyped and using this code on their OEM firmware versions
+### Smart Devices I prototyped using this code on their OEM firmware versions
 
 - [Smart Concrete Curing Monitoring Device](https://github.com/aeonSolutions/AeonLabs-Monitor-Fresh-Reinforced-concrete-Hardening-Strength-maturity)
 - [Validation of Experimental Data Origins: A Swarm of DAQ devices able to Deliver Unique Experimental Data using Blockchain-like Fingerprint ID to a Data Repository](https://github.com/aeonSolutions/openScience-Smart-DAQ-to-Upload-Live-Experimental-Data-to-a-Data-Repository)
 - [Smart Power Switch](https://github.com/aeonSolutions/AeonLabs-Smart-Power-Switch-Outlet/blob/main/README.md)
 - [Smart Coffee Machine Add-on](https://github.com/aeonSolutions/AeonLabs-Home-Automation-Smart-Coffee-MAchine-Addon)
+- ...
 
+...and many other hardware electronics and smart devices. See my [PCB prototype catalog](https://github.com/aeonSolutions/PCB-Prototyping-Catalogue) for more.
 
 <br>
 
@@ -146,7 +148,7 @@ Make a donation on PayPal and get a TAX refund*.
 </p>
 
 ### Support all these open hardware projects and become a GitHub sponsor  
-Liked any of my PCB KiCad Designs? Help and Support my open work to all by becoming a GitHub sponsor.
+Did you like any of my PCB KiCad Designs? Help and Support my open work to all by becoming a GitHub sponsor.
 
 <p align="center">
     <a href="https://github.com/aeonSolutions/PCB-Prototyping-Catalogue/blob/main/become_a_sponsor/aeonlabs-github-sponsorship-agreement.docx">
