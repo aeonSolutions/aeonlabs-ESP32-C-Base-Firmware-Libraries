@@ -17,6 +17,15 @@
 Last update: 3-1-2024
 </p>
 
+## This Library Is Sponsorware 💰💰💰
+The optimized version of this library is only available to my sponsors on GitHub Sponsors.
+It is a code optimized for performance and lightweight in memory usage.  
+
+Enjoy, and thanks for the support! ❤️
+
+Learn more about **Sponsorware** at [https://github.com/aeonSolutions/sponsorware](https://github.com/aeonSolutions/sponsorware) 💰.
+
+
 # [![CodeFactor](https://www.codefactor.io/repository/github/aeonsolutions/aeonlabs-esp32-c-base-firmware-libraries/badge)](https://www.codefactor.io/repository/github/aeonsolutions/aeonlabs-esp32-c-base-firmware-libraries) ESP32 C++ Base Firmware Libraries
 **current project Total: > 520 work.h**
 
@@ -57,14 +66,14 @@ Currently, it includes:
 - WiFi connectivity after light sleep is now working
 - onboard RGB LED is now turning ON the exact RGB color 
 
-View the full [reviion history](https://github.com/aeonSolutions/aeonlabs-ESP32-C-Base-Firmware-Libraries/wiki/revision-history). 
+View the full [revision history](https://github.com/aeonSolutions/aeonlabs-ESP32-C-Base-Firmware-Libraries/wiki/revision-history). 
 
 <br>
 
 ## How to use this Library
-If you're using Arduino Studio for windows, download this repository and unzip it to the "Arduino/libraries" folder located in "Documents". <br>
-Next rename the unziped folder "aeonlabs-ESP32-C-Base-Firmware-Libraries-main" to "AeonLabs". <br>
-Restart Arduino Studio, and the Aeonlabs library is now ready to be used. 
+If you're using Arduino Studio for Windows, download this repository and unzip it to the "Arduino/libraries" folder located in "Documents". <br>
+Next, rename the unzipped folder "aeonlabs-ESP32-C-Base-Firmware-Libraries-main" to "AeonLabs". <br>
+Restart Arduino Studio and the Aeonlabs library is now ready to be used. 
 
 
 <br>
