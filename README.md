@@ -14,7 +14,8 @@
 
 <p align="right">
  <a href="https://github-com.translate.goog/aeonSolutions/aeonlabs-ESP32-C-Base-Firmware-Libraries?_x_tr_sl=en&_x_tr_tl=pt&_x_tr_hl=en&_x_tr_pto=wapp">Change Language</a> <br>
-Last update: 23-06-2024
+Last update: 23-06-2024 <br>
+<sub> <a href="https://www.rapidtables.com/convert/number/hex-to-binary.html?x=64">HEX to Bin Conveter</a> </sub>
 </p>
 
 ## This Library Is Sponsorware 💰💰💰
